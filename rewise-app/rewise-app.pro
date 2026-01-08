@@ -13,7 +13,12 @@ SOURCES += \
     src/mainwindow.cpp
 
 HEADERS += \
-    src/mainwindow.h
+    src/mainwindow.h \
+    src/domain/DomainJson.h \
+    src/domain/Id.h \
+    src/domain/Folder.h \
+    src/domain/Card.h
+
 
 FORMS += \
     src/mainwindow.ui
