@@ -1,22 +1,27 @@
-QT       += core gui
+QT       += widgets
+CONFIG   += c++17 warn_on
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+TEMPLATE = app
+TARGET   = rewise-app
 
-CONFIG += c++17
+# (Опционально) Для более строгих предупреждений на clang/gcc
+QMAKE_CXXFLAGS += -Wall -Wextra -Wpedantic
 
-# You can make your code fail to compile if it uses deprecated APIs.
-# In order to do so, uncomment the following line.
-#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+# --- Sources / Headers / Forms ---
+SOURCES += \
+    src/main.cpp \
+    src/mainwindow.cpp
 
-SOURCES += src/main.cpp \
-           src/mainwindow.cpp
+HEADERS += \
+    src/mainwindow.h
 
-HEADERS += src/mainwindow.h
+FORMS += \
+    src/mainwindow.ui
 
-FORMS += src/mainwindow.ui
-
-
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
+# --- Include paths (если начнёшь подключать подпапки) ---
+INCLUDEPATH += \
+    $$PWD/src \
+    $$PWD/src/domain \
+    $$PWD/src/storage \
+    $$PWD/src/review \
+    $$PWD/src/ui
