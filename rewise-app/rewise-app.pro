@@ -10,14 +10,24 @@ QMAKE_CXXFLAGS += -Wall -Wextra -Wpedantic
 # --- Sources / Headers / Forms ---
 SOURCES += \
     src/main.cpp \
-    src/mainwindow.cpp
+    src/mainwindow.cpp \
+    src/review/TextNormalize.cpp \
+    src/review/Levenshtein.cpp \
+    src/review/WordDiff.cpp \
+    src/review/ReviewEngine.cpp
 
 HEADERS += \
     src/mainwindow.h \
     src/domain/DomainJson.h \
     src/domain/Id.h \
     src/domain/Folder.h \
-    src/domain/Card.h
+    src/domain/Card.h \
+    src/review/ReviewTypes.h \
+    src/review/TextNormalize.h \
+    src/review/Levenshtein.h \
+    src/review/WordDiff.h \
+    src/review/ReviewEngine.h
+
 
 
 FORMS += \
