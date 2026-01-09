@@ -16,12 +16,11 @@ struct Folder final {
     QString name;
 
     bool isValid(QString* whyNot = nullptr) const {
-        const QString trimmed = name.trimmed();
         if (!id.isValid()) {
             if (whyNot) *whyNot = "Folder.id is null/invalid.";
             return false;
         }
-        if (trimmed.isEmpty()) {
+        if (name.trimmed().isEmpty()) {
             if (whyNot) *whyNot = "Folder.name is empty.";
             return false;
         }
@@ -41,27 +40,26 @@ struct Folder final {
             return false;
         }
 
-        const QString idStr = o.value(json_keys::kId).toString();
-        if (idStr.isNull() || idStr.isEmpty()) {
+        const QJsonValue idV = o.value(json_keys::kId);
+        if (!idV.isString()) {
             if (error) *error = "Folder.id is missing or not a string.";
             return false;
         }
-
-        const Id parsedId = Id::fromString(idStr);
+        const Id parsedId = Id::fromString(idV.toString());
         if (!parsedId.isValid()) {
             if (error) *error = "Folder.id is not a valid UUID string.";
             return false;
         }
 
-        const QString nameStr = o.value(json_keys::kName).toString();
-        if (nameStr.isNull()) {
+        const QJsonValue nameV = o.value(json_keys::kName);
+        if (!nameV.isString()) {
             if (error) *error = "Folder.name is missing or not a string.";
             return false;
         }
 
         Folder tmp;
         tmp.id = parsedId;
-        tmp.name = nameStr;
+        tmp.name = nameV.toString();
 
         QString why;
         if (!tmp.isValid(&why)) {
