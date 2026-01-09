@@ -14,7 +14,9 @@ SOURCES += \
     src/review/TextNormalize.cpp \
     src/review/Levenshtein.cpp \
     src/review/WordDiff.cpp \
-    src/review/ReviewEngine.cpp
+    src/review/ReviewEngine.cpp \
+    src/storage/Database.cpp \
+    src/storage/Repository.cpp
 
 HEADERS += \
     src/mainwindow.h \
@@ -26,7 +28,10 @@ HEADERS += \
     src/review/TextNormalize.h \
     src/review/Levenshtein.h \
     src/review/WordDiff.h \
-    src/review/ReviewEngine.h
+    src/review/ReviewEngine.h \
+    src/storage/StorageJson.h \
+    src/storage/Database.h \
+    src/storage/Repository.h
 
 
 
