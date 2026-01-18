@@ -84,18 +84,20 @@ QByteArray Repository::serializeDatabaseJson(const Database& db) const {
     root.insert(json_keys::kVersion, db.version);
 
     QJsonArray foldersArr;
-    foldersArr.reserve(db.folders.size());
+    foldersArr = QJsonArray{};
     for (const Folder& f : db.folders) {
         foldersArr.append(f.toJson());
     }
     root.insert(json_keys::kFolders, foldersArr);
 
+
     QJsonArray cardsArr;
-    cardsArr.reserve(db.cards.size());
+    cardsArr = QJsonArray{};
     for (const Card& c : db.cards) {
         cardsArr.append(c.toJson());
     }
     root.insert(json_keys::kCards, cardsArr);
+
 
     QJsonDocument doc(root);
     return doc.toJson(QJsonDocument::Indented);

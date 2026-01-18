@@ -4,6 +4,8 @@
 #include <QFormLayout>
 #include <QPlainTextEdit>
 #include <QVBoxLayout>
+#include <QPushButton>
+
 
 namespace rewise::ui::widgets {
 
