@@ -159,4 +159,4 @@ build.ninja
 /build/
 build-*/
 cmake-build-*/
-out/
+/rewise-app/build
