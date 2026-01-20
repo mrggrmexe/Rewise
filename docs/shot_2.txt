@@ -1,0 +1,159 @@
+Rewise — shot_2.txt
+Сводка изменений после слияния ветки `skeleton` (UI pages/widgets)
+
+Дата: 2026-01-19
+
+0. Контекст
+   Ветка `skeleton` слита. Цель была — получить рабочий UI-контур (Библиотека + Повторение) поверх существующих модулей:
+
+* domain (Card/Folder/Id)
+* storage (Database/Repository, JSON db.json)
+* review (TextNormalize/Levenshtein/WordDiff/LCS + ReviewEngine)
+
+1. Принципы UI-слоя
+
+* Разделение ответственности:
+
+  * ui/pages: экраны приложения (композиция виджетов, сценарии, сигналы намерений).
+  * ui/widgets: переиспользуемые компоненты UI + модели Qt (баннеры, модели данных, диалоги, diff-виджет).
+  * MainWindow: навигация, применение изменений к Database, сохранение через Repository.
+* Стрессоустойчивость:
+
+  * UI не падает на пустых/невалидных состояниях: кнопки отключаются, показываются сообщения.
+  * Любая ошибка I/O или валидации не блокирует приложение: показывается баннер, состояние остаётся рабочим.
+  * Сохранение выполняется best-effort (с дебаунсом автосейва), без спама записью на диск.
+
+2. Добавленные страницы (ui/pages)
+   2.1) LibraryPage (Библиотека)
+   Назначение: управление папками и карточками (CRUD), поиск, превью карточки, запуск повторения.
+
+UI-состав:
+
+* QListView: папки + виртуальный пункт “Все карточки”.
+* QLineEdit: поиск по question/answer.
+* QTableView: список карточек, сортировка по колонкам.
+* QTextBrowser: превью выбранной карточки (вопрос/ответ).
+* Кнопки: папки (Добавить/Переименовать/Удалить), карточки (Добавить/Редактировать/Удалить), “Начать повторение”.
+
+Сигналы-намерения (LibraryPage → MainWindow):
+
+* folderCreateRequested(name)
+* folderRenameRequested(folderId, newName)
+* folderDeleteRequested(folderId)
+* cardCreateRequested(folderIdOrInvalid, question, answer)
+* cardUpdateRequested(cardId, question, answer)
+* cardDeleteRequested(cardId)
+* startReviewRequested(folderIdOrInvalid)
+
+Поведение:
+
+* Фильтрация карточек по выбранной папке (invalid folderId трактуется как “Все карточки”).
+* Поиск по вопросу/ответу (case-insensitive, без падений на пустых строках).
+* Превью обновляется при смене выделения; если карточка не выбрана — показывается подсказка.
+* Опасные действия подтверждаются QMessageBox (удаление папки/карточки).
+
+2.2) ReviewPage (Повторение)
+Назначение: запуск сессии повторения, ввод ответа, проверка, показ процента и diff.
+
+UI-состав:
+
+* QTextBrowser: вопрос.
+* QPlainTextEdit: ввод ответа.
+* Кнопки: Проверить, Показать ответ, Следующая, Назад.
+* QLabel: процент совпадения.
+* QTextBrowser: эталонный ответ (показывается по кнопке).
+* DiffTextWidget: визуальный word-diff (общие/добавленные/удалённые токены).
+
+Логика:
+
+* Сессия получает список карточек (уже отфильтрованных MainWindow’ом).
+* Выбор следующей карточки случайный, с попыткой не повторять сразу предыдущую.
+* Проверка: ReviewEngine::evaluate(reference, user) → similarity% + diff.
+* Пустая сессия не ломает UI: показывается “нет карточек”, кнопки отключены.
+
+3. Добавленные виджеты и модели (ui/widgets)
+   3.1) InlineMessageWidget
+
+* Баннер для сообщений Info/Warning/Error.
+* Подходит для ошибок сохранения, валидации, пустых состояний.
+
+3.2) FolderListModel (QAbstractListModel)
+
+* Отображает папки.
+* Опционально добавляет виртуальную строку “Все карточки” (row 0).
+* Роли: IdRole (строка id), IsAllRole.
+
+3.3) CardTableModel (QAbstractTableModel)
+
+* Таблица карточек с колонками: Вопрос, Ответ (превью), Папка, Обновлено.
+* Фильтр по папке (invalid id → все).
+* Поиск по question/answer.
+* Сортировка по выбранной колонке.
+* Безопасные preview/formatting (обрезка, sanitized вывод).
+
+3.4) FolderEditDialog
+
+* Диалог создания/переименования папки.
+* Валидация: кнопка OK активна только при непустом имени.
+
+3.5) CardEditDialog
+
+* Диалог создания/редактирования карточки (question/answer).
+* Валидация: OK активна только если оба поля непустые.
+
+3.6) DiffTextWidget
+
+* Отображает word-diff из ReviewEngine (reference/user).
+* Безопасный HTML: все токены экранируются (toHtmlEscaped).
+* Подсветка: common/added/removed (мягкие стили, не зависят от темы).
+
+4. Интеграция через MainWindow
+
+* MainWindow управляет QStackedWidget:
+
+  * страница LibraryPage
+  * страница ReviewPage
+* MainWindow грузит Database через Repository::load().
+* Любые CRUD-действия от LibraryPage обрабатываются в MainWindow:
+
+  * изменения применяются к m_db
+  * запускается ensureUniqueFolderNames()
+  * проверяется validate()
+  * UI обновляется setDatabase()
+  * сохранение планируется дебаунсом (QTimer singleShot)
+* При удалении папки:
+
+  * карточки переносятся в Default (или создаётся Default при необходимости)
+  * дефолтная папка защищена от удаления (логика в MainWindow)
+* При ошибке сохранения Repository::save():
+
+  * работа продолжается
+  * показывается InlineMessageWidget с ошибкой
+
+5. Изменения в сборке (.pro)
+
+* Добавлены новые .h/.cpp из ui/pages и ui/widgets в HEADERS/SOURCES.
+* Важно: для строк с `box->button(...)->setEnabled(...)` нужен include:
+
+  * либо `#include <QPushButton>` в соответствующих .cpp,
+  * либо использовать `QAbstractButton*` без зависимости от QPushButton.
+
+6. Известные моменты и ограничения
+
+* QJsonArray не имеет reserve() (принято: просто append, или отдельные структуры при необходимости).
+* На текущем этапе нет:
+
+  * истории попыток/оценок
+  * статистики
+  * миграций схемы выше v1
+  * шифрования/бэкапов db.json
+* WordDiff на LCS имеет O(n*m) по памяти; для очень длинных текстов стоит в будущем добавить лимит или альтернативу.
+
+7. Следующие логичные шаги
+
+* Hotkeys (Enter=Check, Ctrl+Enter=Next, Ctrl+N=New Card, Del=Delete).
+* Статистика и история повторений (schema v2 + мигратор).
+* Backup db.json (например, db.json.bak перед записью).
+* Ограничение на LCS diff при больших n*m и fallback-режим.
+
+Конец shot_2.txt
