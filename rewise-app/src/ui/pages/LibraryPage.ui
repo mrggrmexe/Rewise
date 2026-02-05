@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>980</width>
+    <width>1200</width>
     <height>680</height>
    </rect>
   </property>
@@ -23,7 +23,7 @@
 
    <!-- messageHost: сюда кодом вставим InlineMessageWidget -->
    <item>
-    <widget class="QWidget" name="messageHost" native="true">
+    <widget class="QWidget" name="messageHost">
      <layout class="QVBoxLayout" name="messageHostLayout">
       <property name="leftMargin"><number>0</number></property>
       <property name="topMargin"><number>0</number></property>
@@ -36,80 +36,90 @@
 
    <item>
     <widget class="QSplitter" name="splitterMain">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
+     <property name="orientation"><enum>Qt::Horizontal</enum></property>
+     <property name="childrenCollapsible"><bool>false</bool></property>
+     <property name="handleWidth"><number>10</number></property>
+     <property name="opaqueResize"><bool>true</bool></property>
 
      <!-- LEFT: folders -->
      <widget class="QGroupBox" name="gbFolders">
-      <property name="title">
-       <string>Папки</string>
-      </property>
+      <property name="minimumSize"><size><width>260</width><height>0</height></size></property>
+      <property name="title"><string>Папки</string></property>
       <layout class="QVBoxLayout" name="foldersLayout">
+       <property name="leftMargin"><number>10</number></property>
+       <property name="topMargin"><number>12</number></property>
+       <property name="rightMargin"><number>10</number></property>
+       <property name="bottomMargin"><number>10</number></property>
        <property name="spacing"><number>8</number></property>
 
        <item>
         <widget class="QListView" name="lvFolders">
-         <property name="selectionMode">
-          <enum>QAbstractItemView::SingleSelection</enum>
+         <property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
          </property>
+         <property name="uniformItemSizes"><bool>true</bool></property>
         </widget>
        </item>
 
        <item>
-        <layout class="QHBoxLayout" name="foldersButtonsRow">
-         <item>
+        <layout class="QGridLayout" name="foldersButtonsGrid">
+         <property name="horizontalSpacing"><number>6</number></property>
+         <property name="verticalSpacing"><number>6</number></property>
+         <item row="0" column="0" colspan="2">
           <widget class="QPushButton" name="btnAddFolder">
            <property name="text"><string>Добавить</string></property>
           </widget>
          </item>
-         <item>
+         <item row="1" column="0">
           <widget class="QPushButton" name="btnRenameFolder">
            <property name="text"><string>Переименовать</string></property>
           </widget>
          </item>
-         <item>
+         <item row="1" column="1">
           <widget class="QPushButton" name="btnDeleteFolder">
            <property name="text"><string>Удалить</string></property>
           </widget>
          </item>
         </layout>
        </item>
+
       </layout>
      </widget>
 
      <!-- RIGHT: cards -->
      <widget class="QGroupBox" name="gbCards">
-      <property name="title">
-       <string>Карточки</string>
-      </property>
+      <property name="title"><string>Карточки</string></property>
       <layout class="QVBoxLayout" name="cardsLayout">
+       <property name="leftMargin"><number>10</number></property>
+       <property name="topMargin"><number>12</number></property>
+       <property name="rightMargin"><number>10</number></property>
+       <property name="bottomMargin"><number>10</number></property>
        <property name="spacing"><number>8</number></property>
 
        <item>
         <widget class="QLineEdit" name="leSearch">
-         <property name="placeholderText">
-          <string>Поиск по вопросу/ответу…</string>
-         </property>
+         <property name="placeholderText"><string>Поиск по вопросу/ответу…</string></property>
+         <property name="clearButtonEnabled"><bool>true</bool></property>
         </widget>
        </item>
 
        <item>
         <widget class="QTableView" name="tvCards">
-         <property name="selectionBehavior">
-          <enum>QAbstractItemView::SelectRows</enum>
+         <property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property>
+         <property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property>
+         <property name="sortingEnabled"><bool>true</bool></property>
+         <property name="showGrid"><bool>false</bool></property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
          </property>
-         <property name="selectionMode">
-          <enum>QAbstractItemView::SingleSelection</enum>
-         </property>
-         <property name="sortingEnabled">
-          <bool>true</bool>
-         </property>
+         <property name="alternatingRowColors"><bool>false</bool></property>
         </widget>
        </item>
 
        <item>
         <layout class="QHBoxLayout" name="cardsButtonsRow">
+         <property name="spacing"><number>8</number></property>
          <item>
           <widget class="QPushButton" name="btnAddCard">
            <property name="text"><string>Добавить</string></property>
@@ -128,9 +138,7 @@
          <item>
           <spacer name="spacerCardsRow">
            <property name="orientation"><enum>Qt::Horizontal</enum></property>
-           <property name="sizeHint" stdset="0">
-            <size><width>40</width><height>20</height></size>
-           </property>
+           <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
           </spacer>
          </item>
          <item>
@@ -143,12 +151,12 @@
 
        <item>
         <widget class="QTextBrowser" name="tbPreview">
-         <property name="minimumSize">
-          <size><width>0</width><height>140</height></size>
-         </property>
+         <property name="minimumSize"><size><width>0</width><height>160</height></size></property>
          <property name="openExternalLinks"><bool>false</bool></property>
+         <property name="frameShape"><enum>QFrame::NoFrame</enum></property>
         </widget>
        </item>
+
       </layout>
      </widget>
 
@@ -159,4 +167,16 @@
  </widget>
  <resources/>
  <connections/>
+ <tabstops>
+  <tabstop>leSearch</tabstop>
+  <tabstop>tvCards</tabstop>
+  <tabstop>btnAddCard</tabstop>
+  <tabstop>btnEditCard</tabstop>
+  <tabstop>btnDeleteCard</tabstop>
+  <tabstop>btnStartReview</tabstop>
+  <tabstop>lvFolders</tabstop>
+  <tabstop>btnAddFolder</tabstop>
+  <tabstop>btnRenameFolder</tabstop>
+  <tabstop>btnDeleteFolder</tabstop>
+ </tabstops>
 </ui>
