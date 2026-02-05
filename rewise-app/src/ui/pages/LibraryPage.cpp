@@ -18,6 +18,7 @@ LibraryPage::LibraryPage(QWidget* parent)
     , ui(new Ui::LibraryPage)
 {
     ui->setupUi(this);
+    ui->btnStartReview->setProperty("primary", true);
 
     // Inline message (banner) — держим в коде, чтобы не возиться с custom widget plugin.
     m_msg = new rewise::ui::widgets::InlineMessageWidget(this);
@@ -44,6 +45,11 @@ LibraryPage::LibraryPage(QWidget* parent)
     ui->tvCards->horizontalHeader()->setSectionResizeMode(rewise::ui::widgets::CardTableModel::AnswerCol, QHeaderView::Stretch);
     ui->tvCards->horizontalHeader()->setSectionResizeMode(rewise::ui::widgets::CardTableModel::FolderCol, QHeaderView::ResizeToContents);
     ui->tvCards->horizontalHeader()->setSectionResizeMode(rewise::ui::widgets::CardTableModel::UpdatedCol, QHeaderView::ResizeToContents);
+    ui->tvCards->setShowGrid(false);
+    ui->tvCards->setAlternatingRowColors(false);
+    ui->tvCards->verticalHeader()->setVisible(false);
+
+
 
     // Splitter initial sizes (folders ~240px)
     ui->splitterMain->setSizes({240, 740});

@@ -15,6 +15,9 @@ ReviewPage::ReviewPage(QWidget* parent)
     , ui(new Ui::ReviewPage)
 {
     ui->setupUi(this);
+    ui->btnCheck->setProperty("primary", true);
+    ui->btnNext->setProperty("primary", true);
+
 
     // Встраиваем баннер сообщений (как в твоём ручном UI)
     // Он не в .ui: добавляем сверху, чтобы не ломать Designer.
