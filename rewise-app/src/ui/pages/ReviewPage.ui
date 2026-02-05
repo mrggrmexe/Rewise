@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ReviewPage</class>
+ <widget class="QWidget" name="ReviewPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>760</width>
+    <height>720</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>ReviewPage</string>
+  </property>
+  <layout class="QVBoxLayout" name="rootLayout">
+   <property name="leftMargin">
+    <number>12</number>
+   </property>
+   <property name="topMargin">
+    <number>12</number>
+   </property>
+   <property name="rightMargin">
+    <number>12</number>
+   </property>
+   <property name="bottomMargin">
+    <number>12</number>
+   </property>
+   <property name="spacing">
+    <number>10</number>
+   </property>
+
+   <item>
+    <layout class="QHBoxLayout" name="topBar">
+     <property name="spacing">
+      <number>10</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="btnBack">
+       <property name="text">
+        <string>← Назад</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="lblTitle">
+       <property name="text">
+        <string>Повторение</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">font-weight:700;</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="spacerTop">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+
+   <item>
+    <widget class="QLabel" name="lblQuestionHeader">
+     <property name="text">
+      <string>Вопрос:</string>
+     </property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QTextBrowser" name="tbQuestion">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>110</height>
+      </size>
+     </property>
+     <property name="openExternalLinks">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QLabel" name="lblAnswerHeader">
+     <property name="text">
+      <string>Ваш ответ:</string>
+     </property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QPlainTextEdit" name="pteAnswer">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>90</height>
+      </size>
+     </property>
+     <property name="placeholderText">
+      <string>Введите ваш ответ…</string>
+     </property>
+     <property name="tabChangesFocus">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+
+   <item>
+    <layout class="QHBoxLayout" name="actionsRow">
+     <item>
+      <widget class="QPushButton" name="btnCheck">
+       <property name="text">
+        <string>Проверить</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnReveal">
+       <property name="text">
+        <string>Показать ответ</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="spacerActions">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnNext">
+       <property name="text">
+        <string>Следующая</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+
+   <item>
+    <widget class="QLabel" name="lblPercent">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font-size:18px; font-weight:700;</string>
+     </property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QLabel" name="lblRefHeader">
+     <property name="text">
+      <string>Эталонный ответ:</string>
+     </property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QTextBrowser" name="tbReference">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>110</height>
+      </size>
+     </property>
+     <property name="openExternalLinks">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QWidget" name="diffHost" native="true">
+     <layout class="QVBoxLayout" name="diffHostLayout">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+     </layout>
+    </widget>
+   </item>
+
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

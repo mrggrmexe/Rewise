@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LibraryPage</class>
+ <widget class="QWidget" name="LibraryPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>980</width>
+    <height>680</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>LibraryPage</string>
+  </property>
+
+  <layout class="QVBoxLayout" name="rootLayout">
+   <property name="leftMargin"><number>12</number></property>
+   <property name="topMargin"><number>12</number></property>
+   <property name="rightMargin"><number>12</number></property>
+   <property name="bottomMargin"><number>12</number></property>
+   <property name="spacing"><number>10</number></property>
+
+   <!-- messageHost: сюда кодом вставим InlineMessageWidget -->
+   <item>
+    <widget class="QWidget" name="messageHost" native="true">
+     <layout class="QVBoxLayout" name="messageHostLayout">
+      <property name="leftMargin"><number>0</number></property>
+      <property name="topMargin"><number>0</number></property>
+      <property name="rightMargin"><number>0</number></property>
+      <property name="bottomMargin"><number>0</number></property>
+      <property name="spacing"><number>0</number></property>
+     </layout>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QSplitter" name="splitterMain">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+
+     <!-- LEFT: folders -->
+     <widget class="QGroupBox" name="gbFolders">
+      <property name="title">
+       <string>Папки</string>
+      </property>
+      <layout class="QVBoxLayout" name="foldersLayout">
+       <property name="spacing"><number>8</number></property>
+
+       <item>
+        <widget class="QListView" name="lvFolders">
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <layout class="QHBoxLayout" name="foldersButtonsRow">
+         <item>
+          <widget class="QPushButton" name="btnAddFolder">
+           <property name="text"><string>Добавить</string></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnRenameFolder">
+           <property name="text"><string>Переименовать</string></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnDeleteFolder">
+           <property name="text"><string>Удалить</string></property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+
+     <!-- RIGHT: cards -->
+     <widget class="QGroupBox" name="gbCards">
+      <property name="title">
+       <string>Карточки</string>
+      </property>
+      <layout class="QVBoxLayout" name="cardsLayout">
+       <property name="spacing"><number>8</number></property>
+
+       <item>
+        <widget class="QLineEdit" name="leSearch">
+         <property name="placeholderText">
+          <string>Поиск по вопросу/ответу…</string>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QTableView" name="tvCards">
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
+         <property name="sortingEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <layout class="QHBoxLayout" name="cardsButtonsRow">
+         <item>
+          <widget class="QPushButton" name="btnAddCard">
+           <property name="text"><string>Добавить</string></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnEditCard">
+           <property name="text"><string>Редактировать</string></property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnDeleteCard">
+           <property name="text"><string>Удалить</string></property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="spacerCardsRow">
+           <property name="orientation"><enum>Qt::Horizontal</enum></property>
+           <property name="sizeHint" stdset="0">
+            <size><width>40</width><height>20</height></size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnStartReview">
+           <property name="text"><string>Начать повторение</string></property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+
+       <item>
+        <widget class="QTextBrowser" name="tbPreview">
+         <property name="minimumSize">
+          <size><width>0</width><height>140</height></size>
+         </property>
+         <property name="openExternalLinks"><bool>false</bool></property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+
+    </widget>
+   </item>
+
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

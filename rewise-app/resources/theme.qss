@@ -1,0 +1,153 @@
+/* Rewise Theme v1 (Qt Widgets) */
+
+QWidget {
+    font-size: 13px;
+}
+
+QWidget#LibraryPage, QWidget#ReviewPage {
+    background: #F5F6F7;
+}
+
+/* Panels */
+QWidget#sidebarPanel, QWidget#mainPanel {
+    background: #FFFFFF;
+    border: 1px solid rgba(20, 20, 20, 0.08);
+    border-radius: 12px;
+}
+
+/* Titles */
+QLabel#lblFolders {
+    font-weight: 800;
+    font-size: 14px;
+}
+
+QLabel#percentLabel {
+    font-weight: 800;
+    font-size: 18px;
+}
+
+/* Inputs */
+QLineEdit, QPlainTextEdit, QTextBrowser {
+    background: #FFFFFF;
+    border: 1px solid rgba(20, 20, 20, 0.10);
+    border-radius: 10px;
+}
+
+QLineEdit {
+    padding: 8px 10px;
+}
+
+QPlainTextEdit, QTextBrowser {
+    padding: 8px;
+}
+
+QLineEdit:focus, QPlainTextEdit:focus, QTextBrowser:focus {
+    border: 1px solid rgba(0, 122, 255, 0.55);
+}
+
+/* Base button */
+QPushButton {
+    border: 1px solid rgba(20, 20, 20, 0.12);
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 10px;
+    padding: 7px 12px;
+}
+
+QPushButton:hover {
+    border: 1px solid rgba(20, 20, 20, 0.20);
+    background: #FFFFFF;
+}
+
+QPushButton:pressed {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+QPushButton:disabled {
+    opacity: 0.5;
+}
+
+/* Primary */
+QPushButton[variant="primary"] {
+    background: rgba(0, 122, 255, 0.92);
+    border: 1px solid rgba(0, 122, 255, 0.92);
+    color: white;
+    font-weight: 700;
+}
+
+QPushButton[variant="primary"]:hover {
+    background: rgba(0, 122, 255, 1.0);
+    border: 1px solid rgba(0, 122, 255, 1.0);
+}
+
+QPushButton[variant="primary"]:pressed {
+    background: rgba(0, 105, 220, 1.0);
+    border: 1px solid rgba(0, 105, 220, 1.0);
+}
+
+/* Destructive */
+QPushButton[variant="destructive"] {
+    background: rgba(220, 60, 60, 0.12);
+    border: 1px solid rgba(220, 60, 60, 0.22);
+    color: #A11;
+    font-weight: 700;
+}
+
+QPushButton[variant="destructive"]:hover {
+    background: rgba(220, 60, 60, 0.18);
+    border: 1px solid rgba(220, 60, 60, 0.30);
+}
+
+/* Ghost */
+QPushButton[variant="ghost"] {
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 6px 10px;
+}
+
+QPushButton[variant="ghost"]:hover {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Folder nav buttons */
+QPushButton[variant="nav"] {
+    border: 1px solid transparent;
+    background: transparent;
+    text-align: left;
+    padding: 8px 10px;
+    border-radius: 10px;
+}
+
+QPushButton[variant="nav"]:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+QPushButton[variant="nav"]:checked {
+    background: rgba(0, 122, 255, 0.14);
+    border: 1px solid rgba(0, 122, 255, 0.20);
+}
+
+/* Card tile buttons */
+QPushButton[variant="card"] {
+    border: 1px solid rgba(20, 20, 20, 0.10);
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 0px; /* inner spacing in layout */
+}
+
+QPushButton[variant="card"]:hover {
+    border: 1px solid rgba(20, 20, 20, 0.18);
+}
+
+QPushButton[variant="card"]:checked {
+    border: 1px solid rgba(0, 122, 255, 0.40);
+    background: rgba(0, 122, 255, 0.05);
+}
+
+/* Text inside card tile */
+QLabel#cardTitle { font-weight: 800; }
+QLabel#cardPreview { color: rgba(20, 20, 20, 0.70); }
+QLabel#cardMeta { color: rgba(20, 20, 20, 0.45); font-size: 12px; }
+
+/* Scroll areas without frames */
+QScrollArea { background: transparent; }

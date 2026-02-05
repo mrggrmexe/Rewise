@@ -83,9 +83,7 @@ QVariant CardTableModel::data(const QModelIndex& index, int role) const {
 }
 
 void CardTableModel::setDatabase(rewise::storage::Database db) {
-    beginResetModel();
     m_db = std::move(db);
-    endResetModel();
     rebuildView();
 }
 
