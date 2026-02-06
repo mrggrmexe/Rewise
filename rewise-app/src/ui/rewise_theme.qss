@@ -125,9 +125,15 @@ QTableView::item {
     border-radius: 8px;
 }
 
-QTableView::item:selected, QListView::item:selected {
-    background: rgba(96, 145, 255, 0.22);
+QTableView::item:selected,
+QListView::item:selected,
+QListView::item:selected:active,
+QListView::item:selected:!active {
+    background: rgba(100, 150, 255, 0.22);
+    border: 1px solid rgba(100, 150, 255, 0.35);
+    color: #1F2430;
 }
+
 
 /* --- Scrollbars (subtle) --- */
 QScrollBar:vertical {

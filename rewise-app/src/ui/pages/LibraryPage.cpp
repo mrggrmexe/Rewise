@@ -10,6 +10,7 @@
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QVBoxLayout>
+#include <QHeaderView>
 
 namespace rewise::ui::pages {
 
@@ -18,6 +19,10 @@ LibraryPage::LibraryPage(QWidget* parent)
     , ui(new Ui::LibraryPage)
 {
     ui->setupUi(this);
+    ui->tvCards->horizontalHeader()->setVisible(false);
+    ui->tvCards->verticalHeader()->setVisible(false);
+    ui->tvCards->setCornerButtonEnabled(false);
+    ui->tvCards->setShowGrid(false);
     ui->btnStartReview->setProperty("primary", true);
 
     // Inline message (banner) — держим в коде, чтобы не возиться с custom widget plugin.
