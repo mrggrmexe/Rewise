@@ -80,39 +80,5 @@ Rewise - shot_1.txt
 - Требование: Qt-проект находится в отдельной папке внутри репозитория.
 - Выбран вариант B: Qt-проект в подпапке "rewise-app/"
 
-Рекомендуемая структура:
-rewise/
-  README.md
-  LICENSE
-  .gitignore
-  .editorconfig
-  docs/
-    shot_1.txt
-  scripts/              (опционально)
-  .github/workflows/    (опционально)
-  rewise-app/           <-- Qt project lives here
-    CMakeLists.txt
-    cmake/              (опционально)
-    src/
-      main.cpp
-      app/              (MainWindow, AppPaths)
-      ui/               (CardsPage, ReviewPage, widgets/)
-      domain/           (Card, Folder)
-      storage/          (Repository: JSON load/save)
-      review/           (Normalize, Levenshtein, WordDiff LCS)
-      utils/            (мелкие утилиты)
-    resources/
-      resources.qrc
-      icons/
-    tests/              (опционально, позже)
-
-Команда сборки из корня репозитория (план):
-- cmake -S rewise-app -B build
-- cmake --build build
-Папка build/ в корне должна игнорироваться.
-
-9) Gitignore
-- Нужен профессиональный .gitignore под macOS/Windows/Linux и Qt/Qt Creator, а также под CMake/qmake и бинарные артефакты.
-- Принцип: игнорировать системные мусорные файлы, IDE user-файлы, build директории, промежуточные .moc/.qrc/.ui, артефакты компиляции.
 
 Конец shot_1.txt

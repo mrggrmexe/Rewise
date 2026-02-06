@@ -1,0 +1,194 @@
+/* Rewise pastel theme (white / blue / lilac) for Qt Widgets
+   Works best with Fusion style.
+*/
+
+QWidget {
+    background: #F4F7FF;
+    color: #1F2430;
+    font-size: 13px;
+}
+
+/* --- Surfaces / cards --- */
+QGroupBox {
+    background: #FFFFFF;
+    border: 1px solid rgba(120, 140, 190, 0.35);
+    border-radius: 14px;
+    margin-top: 16px; /* space for title */
+    padding: 10px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 2px 10px;
+    margin-left: 10px;
+    color: rgba(50, 65, 95, 0.95);
+    font-weight: 700;
+    background: transparent;
+}
+
+/* --- Text inputs --- */
+QLineEdit, QPlainTextEdit, QTextEdit, QTextBrowser {
+    background: #FFFFFF;
+    border: 1px solid rgba(120, 140, 190, 0.35);
+    border-radius: 12px;
+    padding: 8px 10px;
+    selection-background-color: rgba(96, 145, 255, 0.28);
+    selection-color: #1F2430;
+}
+
+/* Make QTextBrowser look like a read-only card */
+QTextBrowser {
+    padding: 10px 12px;
+}
+
+/* Focus ring */
+QLineEdit:focus, QPlainTextEdit:focus, QTextEdit:focus, QTextBrowser:focus {
+    border: 1px solid rgba(86, 132, 255, 0.85);
+    outline: none;
+}
+
+/* Placeholder text in line edits */
+QLineEdit[echoMode="0"] {
+    /* keep default, just here to avoid some mac style quirks */
+}
+
+/* --- Buttons --- */
+QPushButton {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(120, 140, 190, 0.40);
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-weight: 600;
+}
+
+QPushButton:hover {
+    background: rgba(232, 240, 255, 0.95);
+    border: 1px solid rgba(86, 132, 255, 0.55);
+}
+
+QPushButton:pressed {
+    background: rgba(220, 232, 255, 0.95);
+    border: 1px solid rgba(86, 132, 255, 0.65);
+}
+
+QPushButton:disabled {
+    color: rgba(31, 36, 48, 0.35);
+    background: rgba(255, 255, 255, 0.60);
+    border: 1px solid rgba(120, 140, 190, 0.22);
+}
+
+/* Primary action buttons: setProperty("primary", true) in code */
+QPushButton[primary="true"] {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 rgba(90, 138, 255, 0.95),
+                                stop:1 rgba(184, 120, 255, 0.90));
+    color: #0B1020;
+    border: 1px solid rgba(90, 120, 210, 0.55);
+}
+
+QPushButton[primary="true"]:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 rgba(90, 138, 255, 1.0),
+                                stop:1 rgba(184, 120, 255, 0.98));
+}
+
+QPushButton[primary="true"]:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 rgba(70, 120, 235, 0.98),
+                                stop:1 rgba(165, 105, 235, 0.95));
+}
+
+/* --- Tables & lists --- */
+QTableView, QListView {
+    background: #FFFFFF;
+    border: 1px solid rgba(120, 140, 190, 0.35);
+    border-radius: 12px;
+    padding: 2px;
+    selection-background-color: rgba(96, 145, 255, 0.22);
+    selection-color: #1F2430;
+    outline: none;
+}
+
+QHeaderView::section {
+    background: rgba(244, 247, 255, 1.0);
+    color: rgba(50, 65, 95, 0.95);
+    padding: 6px 8px;
+    border: none;
+    border-bottom: 1px solid rgba(120, 140, 190, 0.28);
+    font-weight: 700;
+}
+
+/* soften gridless look */
+QTableView::item {
+    padding: 6px 8px;
+    border-radius: 8px;
+}
+
+QTableView::item:selected,
+QListView::item:selected,
+QListView::item:selected:active,
+QListView::item:selected:!active {
+    background: rgba(100, 150, 255, 0.22);
+    border: 1px solid rgba(100, 150, 255, 0.35);
+    color: #1F2430;
+}
+
+
+/* --- Scrollbars (subtle) --- */
+QScrollBar:vertical {
+    background: transparent;
+    width: 12px;
+    margin: 8px 4px 8px 4px;
+}
+QScrollBar::handle:vertical {
+    background: rgba(120, 140, 190, 0.35);
+    border-radius: 6px;
+    min-height: 24px;
+}
+QScrollBar::handle:vertical:hover {
+    background: rgba(90, 138, 255, 0.45);
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+    width: 0px;
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: transparent;
+}
+
+QScrollBar:horizontal {
+    background: transparent;
+    height: 12px;
+    margin: 4px 8px 4px 8px;
+}
+QScrollBar::handle:horizontal {
+    background: rgba(120, 140, 190, 0.35);
+    border-radius: 6px;
+    min-width: 24px;
+}
+QScrollBar::handle:horizontal:hover {
+    background: rgba(90, 138, 255, 0.45);
+}
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    height: 0px;
+    width: 0px;
+}
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: transparent;
+}
+
+/* --- Status bar --- */
+QStatusBar {
+    background: rgba(244, 247, 255, 1.0);
+    border-top: 1px solid rgba(120, 140, 190, 0.22);
+}
+
+/* --- Splitter handle --- */
+QSplitter::handle {
+    background: rgba(120, 140, 190, 0.16);
+    border-radius: 6px;
+}
+QSplitter::handle:hover {
+    background: rgba(90, 138, 255, 0.22);
+}

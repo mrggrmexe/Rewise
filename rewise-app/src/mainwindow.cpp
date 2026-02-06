@@ -47,7 +47,12 @@ MainWindow::MainWindow(QWidget* parent)
 
     loadDb();
     applyAndRefresh();
+
+#ifndef QT_NO_DEBUG
     statusBar()->showMessage("DB: " + m_repo.databaseFilePath());
+#else
+    statusBar()->hide();
+#endif
 }
 
 MainWindow::~MainWindow() {
