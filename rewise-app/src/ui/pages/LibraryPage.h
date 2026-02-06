@@ -10,9 +10,6 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class LibraryPage; }
 QT_END_NAMESPACE
 
-class QListView;
-class QTableView;
-
 namespace rewise::ui::widgets {
 class InlineMessageWidget;
 class FolderListModel;
@@ -52,9 +49,30 @@ signals:
     void startReviewRequested(const rewise::domain::Id& folderId); // invalid => all
 
 private:
+    enum class FolderEditMode { None, Create, Rename };
+    enum class CardEditMode { None, Create, Edit };
+
     void wireUi();
     void refreshButtons();
     void refreshPreview();
+    void applyEditState();
+
+    // Folder actions
+    void openFolderCreate();
+    void openFolderRename(const rewise::domain::Id& folderId);
+    void closeFolderEditor();
+    void commitFolderEditor();
+    void showFolderMenu(const QPoint& globalPos);
+
+    // Card actions
+    void openCardCreate();
+    void openCardEdit(const rewise::domain::Id& cardId);
+    void closeCardEditor();
+    void commitCardEditor();
+    void requestDeleteCard(const rewise::domain::Id& cardId);
+    void showCardMenu(const QPoint& globalPos);
+
+    bool isEditing() const;
 
 private:
     Ui::LibraryPage* ui = nullptr;
@@ -64,6 +82,12 @@ private:
     rewise::ui::widgets::InlineMessageWidget* m_msg = nullptr;
     rewise::ui::widgets::FolderListModel* m_folderModel = nullptr;
     rewise::ui::widgets::CardTableModel* m_cardModel = nullptr;
+
+    FolderEditMode m_folderEditMode = FolderEditMode::None;
+    rewise::domain::Id m_folderEditId;
+
+    CardEditMode m_cardEditMode = CardEditMode::None;
+    rewise::domain::Id m_cardEditId;
 };
 
 } // namespace rewise::ui::pages

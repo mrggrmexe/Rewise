@@ -6,7 +6,6 @@
 #include <QWidget>
 
 class QTextBrowser;
-class QLabel;
 
 namespace rewise::ui::widgets {
 
@@ -21,7 +20,6 @@ public:
 private:
     static QString renderTokens(const QVector<rewise::review::StyledToken>& tokens, bool isReference);
 
-    QLabel* m_title = nullptr;
     QTextBrowser* m_view = nullptr;
 };
 

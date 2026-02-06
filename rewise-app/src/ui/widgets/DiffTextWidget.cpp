@@ -1,6 +1,5 @@
 #include "DiffTextWidget.h"
 
-#include <QLabel>
 #include <QTextBrowser>
 #include <QVBoxLayout>
 
@@ -9,24 +8,24 @@ namespace rewise::ui::widgets {
 DiffTextWidget::DiffTextWidget(QWidget* parent)
     : QWidget(parent)
 {
-    m_title = new QLabel("Diff", this);
-    m_title->setStyleSheet("font-weight: 600;");
+    // Reuse the same “card” visuals as the rest of the app.
+    setProperty("card", true);
 
     m_view = new QTextBrowser(this);
     m_view->setOpenExternalLinks(false);
     m_view->setReadOnly(true);
+    m_view->setProperty("flat", true);
 
     auto* root = new QVBoxLayout(this);
-    root->setContentsMargins(0, 0, 0, 0);
-    root->setSpacing(6);
-    root->addWidget(m_title);
+    root->setContentsMargins(12, 10, 12, 10);
+    root->setSpacing(0);
     root->addWidget(m_view, 1);
 
     clear();
 }
 
 void DiffTextWidget::clear() {
-    m_view->setHtml("<div style='opacity:0.7'>Пока нечего показывать.</div>");
+    m_view->setHtml("<div style='opacity:0.65'>Пока нечего показывать.</div>");
 }
 
 static QString tokenSpan(const QString& text, const QString& style) {
@@ -34,7 +33,7 @@ static QString tokenSpan(const QString& text, const QString& style) {
 }
 
 QString DiffTextWidget::renderTokens(const QVector<rewise::review::StyledToken>& tokens, bool isReference) {
-    // Мы фиксируем пробелы CSS-ом, чтобы нормально отображались разделители.
+    // Keep spaces readable in HTML.
     QString out;
     out.reserve(tokens.size() * 16);
 
@@ -47,10 +46,14 @@ QString DiffTextWidget::renderTokens(const QVector<rewise::review::StyledToken>&
                 style = "";
                 break;
             case rewise::review::DiffRole::Added:
-                style = isReference ? "opacity:0.35;" : "background: rgba(60, 180, 90, 0.18); border-radius:4px; padding:1px 3px;";
+                style = isReference
+                    ? "opacity:0.35;"
+                    : "background: rgba(60, 180, 90, 0.18); border-radius:4px; padding:1px 3px;";
                 break;
             case rewise::review::DiffRole::Removed:
-                style = isReference ? "background: rgba(200, 60, 60, 0.16); border-radius:4px; padding:1px 3px; text-decoration: line-through;" : "opacity:0.35;";
+                style = isReference
+                    ? "background: rgba(200, 60, 60, 0.16); border-radius:4px; padding:1px 3px; text-decoration: line-through;"
+                    : "opacity:0.35;";
                 break;
         }
 
@@ -67,11 +70,11 @@ void DiffTextWidget::setReviewResult(const rewise::review::ReviewResult& r) {
     const QString html =
         "<div style='white-space: pre-wrap; line-height:1.35;'>"
         "<div style='margin-bottom:10px;'>"
-          "<div style='font-weight:600; margin-bottom:4px;'>Эталон</div>"
+          "<div style='font-weight:700; margin-bottom:4px;'>Эталон</div>"
           "<div>" + ref + "</div>"
         "</div>"
         "<div>"
-          "<div style='font-weight:600; margin-bottom:4px;'>Ваш ответ</div>"
+          "<div style='font-weight:700; margin-bottom:4px;'>Ваш ответ</div>"
           "<div>" + usr + "</div>"
         "</div>"
         "</div>";
