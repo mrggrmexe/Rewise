@@ -1,12 +1,10 @@
 #include "ReviewPage.h"
 #include "ui_ReviewPage.h"
 
-#include "review/ReviewEngine.h"
-#include "ui/widgets/DiffTextWidget.h"
-#include "ui/widgets/InlineMessageWidget.h"
+#include "ui/widgets/CardWidget.h"
+#include "ui/widgets/NotificationCenter.h"
 
 #include <QRandomGenerator>
-#include <QVBoxLayout>
 
 namespace rewise::ui::pages {
 
@@ -15,152 +13,78 @@ ReviewPage::ReviewPage(QWidget* parent)
     , ui(new Ui::ReviewPage)
 {
     ui->setupUi(this);
-    ui->btnCheck->setProperty("primary", true);
-    ui->btnNext->setProperty("primary", true);
 
+    // Start in "empty" state
+    ui->stack->setCurrentWidget(ui->pageEmpty);
 
-    // Встраиваем баннер сообщений (как в твоём ручном UI)
-    // Он не в .ui: добавляем сверху, чтобы не ломать Designer.
-    m_msg = new rewise::ui::widgets::InlineMessageWidget(this);
-    ui->rootLayout->insertWidget(1, m_msg); // после topBar
+    // Create shared CardWidget for the session.
+    m_cardWidget = new rewise::ui::widgets::CardWidget(ui->cardHost);
+    m_cardWidget->setHeaderVisible(false);
+    m_cardWidget->setCloseButtonVisible(false);
+    m_cardWidget->setElevated(false);
 
-    // Встраиваем DiffTextWidget внутрь diffHost
-    m_diff = new rewise::ui::widgets::DiffTextWidget(ui->diffHost);
-    if (!ui->diffHost->layout()) {
-        auto* l = new QVBoxLayout(ui->diffHost);
-        l->setContentsMargins(0, 0, 0, 0);
-        ui->diffHost->setLayout(l);
-    }
-    ui->diffHost->layout()->addWidget(m_diff);
+    ui->cardHostLayout->addWidget(m_cardWidget);
 
-    wireUi();
-    stopSession();
+    connect(ui->btnBack, &QToolButton::clicked, this, [this] {
+        stopSession();
+        emit exitRequested();
+    });
+
+    connect(m_cardWidget, &rewise::ui::widgets::CardWidget::nextRequested,
+            this, &ReviewPage::pickAndShowNextCard);
 }
 
 ReviewPage::~ReviewPage() {
     delete ui;
 }
 
-void ReviewPage::wireUi() {
-    connect(ui->btnBack, &QPushButton::clicked, this, [this] {
-        stopSession();
-        emit exitRequested();
-    });
-
-    connect(ui->btnCheck, &QPushButton::clicked, this, [this] {
-        if (m_current < 0 || m_current >= m_cards.size()) return;
-        const auto& card = m_cards[m_current];
-
-        const QString user = ui->pteAnswer->toPlainText();
-        const auto res = rewise::review::ReviewEngine::evaluate(card.answer, user);
-
-        m_checked = true;
-
-        ui->lblPercent->setText(QString("Совпадение: %1%").arg(res.similarity.percent));
-        m_diff->setReviewResult(res);
-
-        if (!m_revealed) {
-            ui->tbReference->setHtml("<div style='opacity:0.7'>Нажмите “Показать ответ”.</div>");
-        } else {
-            ui->tbReference->setHtml("<div style='white-space:pre-wrap;'>" + card.answer.toHtmlEscaped() + "</div>");
-        }
-
-        ui->btnNext->setEnabled(true);
-    });
-
-    connect(ui->btnReveal, &QPushButton::clicked, this, [this] {
-        if (m_current < 0 || m_current >= m_cards.size()) return;
-        const auto& card = m_cards[m_current];
-        m_revealed = true;
-        ui->tbReference->setHtml("<div style='white-space:pre-wrap;'>" + card.answer.toHtmlEscaped() + "</div>");
-    });
-
-    connect(ui->btnNext, &QPushButton::clicked, this, [this] {
-        pickNextCard();
-        showCard();
-    });
+void ReviewPage::setNotifier(rewise::ui::widgets::NotificationCenter* n) {
+    m_notify = n;
 }
 
-void ReviewPage::startSession(QVector<rewise::domain::Card> cards, const QString& title) {
-    m_cards = std::move(cards);
-    m_titleText = title;
-
-    if (m_msg) m_msg->clearMessage();
+void ReviewPage::startSession(const rewise::domain::Folder& folder,
+                              const QVector<rewise::domain::Card>& cards) {
+    m_folder = folder;
+    m_cards = cards;
+    m_index = -1;
 
     if (m_cards.isEmpty()) {
-        ui->lblTitle->setText("Повторение — пусто");
-        ui->tbQuestion->setHtml("<div style='opacity:0.7'>В выбранной папке нет карточек.</div>");
-        ui->pteAnswer->setEnabled(false);
-        ui->btnCheck->setEnabled(false);
-        ui->btnReveal->setEnabled(false);
-        ui->btnNext->setEnabled(false);
+        ui->lblEmptyHint->setText(QStringLiteral("В этой папке пока нет карточек для повторения."));
+        ui->stack->setCurrentWidget(ui->pageEmpty);
+
+        if (m_notify) {
+            m_notify->showInfo(QStringLiteral("В папке нет карточек."));
+        }
         return;
     }
 
-    ui->lblTitle->setText(QString("Повторение: %1").arg(m_titleText));
-    ui->pteAnswer->setEnabled(true);
-    ui->btnCheck->setEnabled(true);
-    ui->btnReveal->setEnabled(true);
+    ui->lblTitle->setText(QStringLiteral("Повторение · %1").arg(m_folder.name));
+    ui->stack->setCurrentWidget(ui->pageCard);
 
-    m_last = -1;
-    pickNextCard();
-    showCard();
+    pickAndShowNextCard();
 }
 
 void ReviewPage::stopSession() {
+    m_folder = {};
     m_cards.clear();
-    m_titleText.clear();
-    m_current = -1;
-    m_last = -1;
+    m_index = -1;
 
-    ui->lblTitle->setText("Повторение");
-    ui->tbQuestion->setHtml("<div style='opacity:0.7'>Запустите повторение из библиотеки.</div>");
-    ui->pteAnswer->clear();
-    ui->pteAnswer->setEnabled(false);
-
-    ui->btnCheck->setEnabled(false);
-    ui->btnReveal->setEnabled(false);
-    ui->btnNext->setEnabled(false);
-
-    clearResultUi();
+    ui->lblTitle->setText(QStringLiteral("Повторение"));
+    ui->lblEmptyHint->setText(QStringLiteral("Выберите папку в библиотеке и нажмите «Повторять»."));
+    ui->stack->setCurrentWidget(ui->pageEmpty);
 }
 
-void ReviewPage::pickNextCard() {
-    if (m_cards.isEmpty()) {
-        m_current = -1;
-        return;
+void ReviewPage::pickAndShowNextCard() {
+    if (m_cards.isEmpty()) return;
+
+    // Random walk: prevents "same card repeat" a bit.
+    int next = QRandomGenerator::global()->bounded(m_cards.size());
+    if (m_cards.size() > 1 && next == m_index) {
+        next = (next + 1) % m_cards.size();
     }
-    if (m_cards.size() == 1) {
-        m_current = 0;
-        return;
-    }
 
-    int idx = m_last;
-    for (int guard = 0; guard < 20 && idx == m_last; ++guard) {
-        idx = static_cast<int>(QRandomGenerator::global()->bounded(m_cards.size()));
-    }
-    m_current = idx;
-    m_last = idx;
-}
-
-void ReviewPage::clearResultUi() {
-    m_checked = false;
-    m_revealed = false;
-    ui->lblPercent->clear();
-    ui->tbReference->setHtml("<div style='opacity:0.7'>Нажмите “Показать ответ”.</div>");
-    if (m_diff) m_diff->clear();
-}
-
-void ReviewPage::showCard() {
-    clearResultUi();
-    if (m_current < 0 || m_current >= m_cards.size()) return;
-
-    const auto& card = m_cards[m_current];
-    ui->tbQuestion->setHtml("<div style='white-space:pre-wrap;'>" + card.question.toHtmlEscaped() + "</div>");
-    ui->pteAnswer->clear();
-    ui->pteAnswer->setFocus();
-
-    ui->btnNext->setEnabled(true);
+    m_index = next;
+    m_cardWidget->setReviewCard(m_cards[m_index]);
 }
 
 } // namespace rewise::ui::pages

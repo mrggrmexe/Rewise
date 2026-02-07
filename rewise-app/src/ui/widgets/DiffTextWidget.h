@@ -14,12 +14,16 @@ class DiffTextWidget final : public QWidget {
 public:
     explicit DiffTextWidget(QWidget* parent = nullptr);
 
+    void setFramed(bool framed);
+    bool framed() const { return m_framed; }
+
     void clear();
     void setReviewResult(const rewise::review::ReviewResult& r);
 
 private:
     static QString renderTokens(const QVector<rewise::review::StyledToken>& tokens, bool isReference);
 
+    bool m_framed = false;
     QTextBrowser* m_view = nullptr;
 };
 

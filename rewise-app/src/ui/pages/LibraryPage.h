@@ -1,8 +1,8 @@
 #ifndef REWISE_UI_PAGES_LIBRARYPAGE_H
 #define REWISE_UI_PAGES_LIBRARYPAGE_H
 
-#include "storage/Database.h"
 #include "domain/Id.h"
+#include "storage/Database.h"
 
 #include <QWidget>
 
@@ -11,9 +11,10 @@ namespace Ui { class LibraryPage; }
 QT_END_NAMESPACE
 
 namespace rewise::ui::widgets {
-class InlineMessageWidget;
 class FolderListModel;
 class CardTableModel;
+class NotificationCenter;
+class CardPopupDialog;
 }
 
 namespace rewise::ui::pages {
@@ -24,70 +25,51 @@ public:
     explicit LibraryPage(QWidget* parent = nullptr);
     ~LibraryPage() override;
 
-    void setDatabase(rewise::storage::Database db);
+    void setNotifier(rewise::ui::widgets::NotificationCenter* n);
 
-    void showError(const QString& text);
-    void showInfo(const QString& text);
-    void clearMessage();
-
-    rewise::domain::Id selectedFolderId() const; // invalid => all
-    rewise::domain::Id selectedCardId() const;
+    void setDatabase(const rewise::storage::Database& db);
 
 signals:
     void folderCreateRequested(const QString& name);
-    void folderRenameRequested(const rewise::domain::Id& folderId, const QString& newName);
-    void folderDeleteRequested(const rewise::domain::Id& folderId);
+    void folderRenameRequested(const rewise::domain::Id& id, const QString& newName);
+    void folderDeleteRequested(const rewise::domain::Id& id);
 
-    void cardCreateRequested(const rewise::domain::Id& folderId,
-                             const QString& question,
-                             const QString& answer);
-    void cardUpdateRequested(const rewise::domain::Id& cardId,
-                             const QString& question,
-                             const QString& answer);
+    void cardCreateRequested(const rewise::domain::Id& folderId, const QString& question, const QString& answer);
+    void cardUpdateRequested(const rewise::domain::Id& cardId, const QString& question, const QString& answer);
     void cardDeleteRequested(const rewise::domain::Id& cardId);
 
-    void startReviewRequested(const rewise::domain::Id& folderId); // invalid => all
+    void startReviewRequested(const rewise::domain::Id& folderId);
 
 private:
     enum class FolderEditMode { None, Create, Rename };
-    enum class CardEditMode { None, Create, Edit };
 
-    void wireUi();
-    void refreshButtons();
-    void refreshPreview();
-    void applyEditState();
+    rewise::domain::Id currentFolderId() const;
 
-    // Folder actions
-    void openFolderCreate();
-    void openFolderRename(const rewise::domain::Id& folderId);
+    void openFolderEditorCreate();
+    void openFolderEditorRename(const rewise::domain::Folder& f);
     void closeFolderEditor();
     void commitFolderEditor();
-    void showFolderMenu(const QPoint& globalPos);
 
-    // Card actions
-    void openCardCreate();
-    void openCardEdit(const rewise::domain::Id& cardId);
-    void closeCardEditor();
-    void commitCardEditor();
-    void requestDeleteCard(const rewise::domain::Id& cardId);
-    void showCardMenu(const QPoint& globalPos);
+    void openNewCardPopup();
+    void openCardPopup(const rewise::domain::Card& card, const QPoint& globalAnchor);
+    void closeCardPopup();
 
-    bool isEditing() const;
+    void showError(const QString& text);
+    void showInfo(const QString& text);
 
 private:
     Ui::LibraryPage* ui = nullptr;
 
     rewise::storage::Database m_db;
 
-    rewise::ui::widgets::InlineMessageWidget* m_msg = nullptr;
-    rewise::ui::widgets::FolderListModel* m_folderModel = nullptr;
-    rewise::ui::widgets::CardTableModel* m_cardModel = nullptr;
+    rewise::ui::widgets::NotificationCenter* m_notify = nullptr;
+    rewise::ui::widgets::FolderListModel* m_foldersModel = nullptr;
+    rewise::ui::widgets::CardTableModel* m_cardsModel = nullptr;
 
     FolderEditMode m_folderEditMode = FolderEditMode::None;
-    rewise::domain::Id m_folderEditId;
+    rewise::domain::Id m_editFolderId;
 
-    CardEditMode m_cardEditMode = CardEditMode::None;
-    rewise::domain::Id m_cardEditId;
+    rewise::ui::widgets::CardPopupDialog* m_cardPopup = nullptr;
 };
 
 } // namespace rewise::ui::pages

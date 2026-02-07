@@ -1,24 +1,21 @@
 #include "LibraryPage.h"
 #include "ui_LibraryPage.h"
 
-#include "ui/widgets/InlineMessageWidget.h"
-#include "ui/widgets/FolderListModel.h"
+#include "ui/widgets/CardPopupDialog.h"
+#include "ui/widgets/CardWidget.h"
 #include "ui/widgets/CardTableModel.h"
+#include "ui/widgets/FolderListModel.h"
+#include "ui/widgets/NotificationCenter.h"
+#include "ui/widgets/ToastWidget.h"
 
 #include <QHeaderView>
-#include <QMessageBox>
-#include <QVBoxLayout>
+#include <QList>
 #include <QMenu>
-#include <QStyle>
-#include <QToolButton>
-
-#include <algorithm>
+#include <QModelIndex>
+#include <QPoint>
+#include <QTableView>
 
 namespace rewise::ui::pages {
-
-static QPoint menuAnchorBelow(QWidget* w) {
-    return w->mapToGlobal(QPoint(0, w->height()));
-}
 
 LibraryPage::LibraryPage(QWidget* parent)
     : QWidget(parent)
@@ -26,562 +23,389 @@ LibraryPage::LibraryPage(QWidget* parent)
 {
     ui->setupUi(this);
 
-    // --- Styling hooks (QSS) ---
-    ui->frameFolders->setProperty("card", true);
-    ui->frameCards->setProperty("card", true);
-    ui->detailsStack->setProperty("card", true);
-    ui->tbPreview->setProperty("flat", true);
-    ui->leSearch->setProperty("search", true);
+    // Splitter defaults
+    ui->splitMain->setStretchFactor(0, 0);
+    ui->splitMain->setStretchFactor(1, 1);
+    ui->splitMain->setSizes(QList<int>{280, 700});
 
-    ui->btnStartReview->setProperty("primary", true);
-
-    // Tool-buttons: icon-ish, no focus rectangle noise.
-    const auto prepToolBtn = [](QToolButton* b) {
-        if (!b) return;
-        b->setAutoRaise(true);
-        b->setFocusPolicy(Qt::NoFocus);
-    };
-    prepToolBtn(ui->btnAddFolder);
-    prepToolBtn(ui->btnFolderMore);
-    prepToolBtn(ui->btnFolderSave);
-    prepToolBtn(ui->btnFolderCancel);
-
-    prepToolBtn(ui->btnAddCard);
-    prepToolBtn(ui->btnEditCard);
-    prepToolBtn(ui->btnDeleteCard);
-    prepToolBtn(ui->btnCardSave);
-    prepToolBtn(ui->btnCardCancel);
-
-    // Use a mix of glyphs + standard icons (stable on macOS/Fusion).
-    ui->btnAddFolder->setText(QStringLiteral("＋"));
-    ui->btnFolderMore->setText(QStringLiteral("⋯"));
-
-    ui->btnAddCard->setText(QStringLiteral("＋"));
-    ui->btnEditCard->setText(QStringLiteral("✎"));
-
-    ui->btnDeleteCard->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
-    ui->btnDeleteCard->setText(QString());
-    ui->btnDeleteCard->setToolButtonStyle(Qt::ToolButtonIconOnly);
-
-    ui->btnFolderSave->setIcon(style()->standardIcon(QStyle::SP_DialogApplyButton));
-    ui->btnFolderSave->setText(QString());
-    ui->btnFolderSave->setToolButtonStyle(Qt::ToolButtonIconOnly);
-
-    ui->btnFolderCancel->setIcon(style()->standardIcon(QStyle::SP_DialogCancelButton));
-    ui->btnFolderCancel->setText(QString());
-    ui->btnFolderCancel->setToolButtonStyle(Qt::ToolButtonIconOnly);
-
-    ui->btnCardSave->setIcon(style()->standardIcon(QStyle::SP_DialogApplyButton));
-    ui->btnCardSave->setText(QString());
-    ui->btnCardSave->setToolButtonStyle(Qt::ToolButtonIconOnly);
-
-    ui->btnCardCancel->setIcon(style()->standardIcon(QStyle::SP_DialogCancelButton));
-    ui->btnCardCancel->setText(QString());
-    ui->btnCardCancel->setToolButtonStyle(Qt::ToolButtonIconOnly);
-
-    // Splitters: keep layout tight, allow user-driven sizing.
-    ui->splitMain->setChildrenCollapsible(false);
-    ui->splitCards->setChildrenCollapsible(false);
-
-    {
-        QList<int> sizes;
-        sizes << 280 << 900;
-        ui->splitMain->setSizes(sizes);
-    }
-    {
-        QList<int> sizes;
-        sizes << 420 << 220;
-        ui->splitCards->setSizes(sizes);
-    }
-
-    // Inline message (banner) — держим в коде (без custom widget plugin).
-    m_msg = new rewise::ui::widgets::InlineMessageWidget(this);
-    if (!ui->messageHost->layout()) {
-        auto* l = new QVBoxLayout(ui->messageHost);
-        l->setContentsMargins(0, 0, 0, 0);
-        l->setSpacing(0);
-        ui->messageHost->setLayout(l);
-    }
-    ui->messageHost->layout()->addWidget(m_msg);
+    // Panels as "cards" (styled via QSS dynamic property selectors)
+    ui->foldersPanel->setProperty("card", true);
+    ui->cardsPanel->setProperty("card", true);
 
     // Models
-    m_folderModel = new rewise::ui::widgets::FolderListModel(this);
-    m_cardModel   = new rewise::ui::widgets::CardTableModel(this);
+    m_foldersModel = new rewise::ui::widgets::FolderListModel(this);
+    m_foldersModel->setIncludeAllItem(true);
+    ui->lvFolders->setModel(m_foldersModel);
 
-    ui->lvFolders->setModel(m_folderModel);
+    m_cardsModel = new rewise::ui::widgets::CardTableModel(this);
+    ui->tvCards->setModel(m_cardsModel);
 
-    ui->tvCards->setModel(m_cardModel);
-    ui->tvCards->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->tvCards->setSelectionMode(QAbstractItemView::SingleSelection);
-    ui->tvCards->setSortingEnabled(true);
-    ui->tvCards->setCornerButtonEnabled(false);
-    ui->tvCards->setShowGrid(false);
-    ui->tvCards->setAlternatingRowColors(false);
-    ui->tvCards->verticalHeader()->setVisible(false);
-    ui->tvCards->horizontalHeader()->setVisible(false);
+    // Cards table presentation
     ui->tvCards->horizontalHeader()->setStretchLastSection(true);
-    ui->tvCards->verticalHeader()->setDefaultSectionSize(44);
+    ui->tvCards->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->tvCards->verticalHeader()->setVisible(false);
+    ui->tvCards->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tvCards->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->tvCards->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    ui->tvCards->horizontalHeader()->setSectionResizeMode(rewise::ui::widgets::CardTableModel::QuestionCol, QHeaderView::Stretch);
-    ui->tvCards->horizontalHeader()->setSectionResizeMode(rewise::ui::widgets::CardTableModel::AnswerCol, QHeaderView::Stretch);
-
-    // Убираем визуальный шум: папка и дата — в будущем можно включать опционально.
+    // Hide noisy columns in library list
+    ui->tvCards->setColumnHidden(rewise::ui::widgets::CardTableModel::AnswerCol, true);
     ui->tvCards->setColumnHidden(rewise::ui::widgets::CardTableModel::FolderCol, true);
     ui->tvCards->setColumnHidden(rewise::ui::widgets::CardTableModel::UpdatedCol, true);
 
-    // Context menus (чтобы убрать лишние кнопки с экрана).
-    ui->lvFolders->viewport()->setContextMenuPolicy(Qt::CustomContextMenu);
-    ui->tvCards->viewport()->setContextMenuPolicy(Qt::CustomContextMenu);
+    // Folder editor
+    ui->folderEditor->setVisible(false);
 
-    wireUi();
-    applyEditState();
-    refreshButtons();
-    refreshPreview();
+    // Wiring: search
+    connect(ui->leSearch, &QLineEdit::textChanged, this, [this](const QString& t) {
+        m_cardsModel->setSearchQuery(t);
+    });
+
+    // Wiring: folder selection -> filter cards
+    connect(ui->lvFolders->selectionModel(), &QItemSelectionModel::currentChanged,
+            this, [this](const QModelIndex& current, const QModelIndex&) {
+        const int row = current.row();
+        const auto id = m_foldersModel->idAtRow(row);
+        m_cardsModel->setFolderFilter(id);
+    });
+
+    // Default selection (All)
+    if (m_foldersModel->rowCount() > 0) {
+        ui->lvFolders->setCurrentIndex(m_foldersModel->index(0, 0));
+    }
+
+    // Folder actions
+    connect(ui->btnNewFolder, &QToolButton::clicked, this, &LibraryPage::openFolderEditorCreate);
+
+    connect(ui->btnFolderMore, &QToolButton::clicked, this, [this] {
+        const QModelIndex idx = ui->lvFolders->currentIndex();
+        if (!idx.isValid()) return;
+
+        const int row = idx.row();
+        if (m_foldersModel->isAllRow(row)) return;
+
+        const auto folderId = m_foldersModel->idAtRow(row);
+        const auto* f = m_db.folderById(folderId);
+        if (!f) return;
+
+        QMenu menu(this);
+        QAction* actRename = menu.addAction(QStringLiteral("Переименовать"));
+        QAction* actDelete = menu.addAction(QStringLiteral("Удалить"));
+
+        const QPoint anchor = ui->btnFolderMore->mapToGlobal(QPoint(ui->btnFolderMore->width() / 2,
+                                                                   ui->btnFolderMore->height()));
+        QAction* chosen = menu.exec(anchor);
+        if (!chosen) return;
+
+        if (chosen == actRename) {
+            openFolderEditorRename(*f);
+        } else if (chosen == actDelete) {
+            if (!m_notify) {
+                emit folderDeleteRequested(folderId);
+                return;
+            }
+
+            auto* toast = m_notify->showConfirm(
+                QStringLiteral("Удалить папку «%1»? Карточки из неё будут перенесены в Default.").arg(f->name),
+                QStringLiteral("Удалить"),
+                QStringLiteral("Отмена"));
+
+            connect(toast, &rewise::ui::widgets::ToastWidget::accepted, this, [this, folderId] {
+                emit folderDeleteRequested(folderId);
+            });
+        }
+    });
+
+    connect(ui->btnFolderCancel, &QPushButton::clicked, this, &LibraryPage::closeFolderEditor);
+    connect(ui->btnFolderCommit, &QPushButton::clicked, this, &LibraryPage::commitFolderEditor);
+    connect(ui->leFolderName, &QLineEdit::returnPressed, this, &LibraryPage::commitFolderEditor);
+
+    // Folder context menu (rename/delete)
+    connect(ui->lvFolders, &QListView::customContextMenuRequested, this, [this](const QPoint& pos) {
+        const QModelIndex idx = ui->lvFolders->indexAt(pos);
+        if (!idx.isValid()) return;
+
+        const int row = idx.row();
+        if (m_foldersModel->isAllRow(row)) return;
+
+        const auto folderId = m_foldersModel->idAtRow(row);
+        const auto* f = m_db.folderById(folderId);
+        if (!f) return;
+
+        QMenu menu(this);
+        QAction* actRename = menu.addAction(QStringLiteral("Переименовать"));
+        QAction* actDelete = menu.addAction(QStringLiteral("Удалить"));
+
+        QAction* chosen = menu.exec(ui->lvFolders->viewport()->mapToGlobal(pos));
+        if (!chosen) return;
+
+        if (chosen == actRename) {
+            openFolderEditorRename(*f);
+        } else if (chosen == actDelete) {
+            if (!m_notify) {
+                emit folderDeleteRequested(folderId);
+                return;
+            }
+
+            auto* toast = m_notify->showConfirm(
+                QStringLiteral("Удалить папку «%1»? Карточки из неё будут перенесены в Default.").arg(f->name),
+                QStringLiteral("Удалить"),
+                QStringLiteral("Отмена"));
+
+            connect(toast, &rewise::ui::widgets::ToastWidget::accepted, this, [this, folderId] {
+                emit folderDeleteRequested(folderId);
+            });
+        }
+    });
+
+    // Card actions
+    connect(ui->btnNewCard, &QToolButton::clicked, this, &LibraryPage::openNewCardPopup);
+
+    connect(ui->btnReview, &QPushButton::clicked, this, [this] {
+        emit startReviewRequested(currentFolderId());
+    });
+
+    // Card click -> popup
+    connect(ui->tvCards, &QTableView::clicked, this, [this](const QModelIndex& idx) {
+        if (!idx.isValid()) return;
+
+        const int row = idx.row();
+        const auto* c = m_cardsModel->cardAtRow(row);
+        if (!c) return;
+
+        const QRect vr = ui->tvCards->visualRect(idx);
+        const QPoint globalAnchor = ui->tvCards->viewport()->mapToGlobal(vr.center());
+
+        openCardPopup(*c, globalAnchor);
+    });
+
+    // Card context menu: delete (quick)
+    connect(ui->tvCards, &QTableView::customContextMenuRequested, this, [this](const QPoint& pos) {
+        const QModelIndex idx = ui->tvCards->indexAt(pos);
+        if (!idx.isValid()) return;
+
+        const int row = idx.row();
+        const auto* c = m_cardsModel->cardAtRow(row);
+        if (!c) return;
+
+        QMenu menu(this);
+        QAction* actOpen = menu.addAction(QStringLiteral("Открыть"));
+        QAction* actDelete = menu.addAction(QStringLiteral("Удалить"));
+
+        QAction* chosen = menu.exec(ui->tvCards->viewport()->mapToGlobal(pos));
+        if (!chosen) return;
+
+        if (chosen == actOpen) {
+            const QRect vr = ui->tvCards->visualRect(idx);
+            const QPoint globalAnchor = ui->tvCards->viewport()->mapToGlobal(vr.center());
+            openCardPopup(*c, globalAnchor);
+            return;
+        }
+
+        if (chosen == actDelete) {
+            if (!m_notify) {
+                emit cardDeleteRequested(c->id);
+                return;
+            }
+
+            auto* toast = m_notify->showConfirm(
+                QStringLiteral("Удалить карточку?"),
+                QStringLiteral("Удалить"),
+                QStringLiteral("Отмена"));
+
+            connect(toast, &rewise::ui::widgets::ToastWidget::accepted, this, [this, id = c->id] {
+                emit cardDeleteRequested(id);
+            });
+        }
+    });
 }
 
 LibraryPage::~LibraryPage() {
     delete ui;
 }
 
-bool LibraryPage::isEditing() const {
-    return (m_folderEditMode != FolderEditMode::None) || (m_cardEditMode != CardEditMode::None);
+void LibraryPage::setNotifier(rewise::ui::widgets::NotificationCenter* n) {
+    m_notify = n;
 }
 
-void LibraryPage::wireUi() {
-    // Search
-    connect(ui->leSearch, &QLineEdit::textChanged, this, [this](const QString& t) {
-        m_cardModel->setSearchQuery(t);
-        refreshButtons();
-        refreshPreview();
-    });
+void LibraryPage::setDatabase(const rewise::storage::Database& db) {
+    const auto prevFolder = currentFolderId();
 
-    // Folder selection => filter cards
-    connect(ui->lvFolders->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this] {
-        if (isEditing()) return; // не меняем контекст, пока открыт inline-editor
-        m_cardModel->setFolderFilter(selectedFolderId());
-        refreshButtons();
-        refreshPreview();
-    });
+    m_db = db;
 
-    // Card selection => preview
-    connect(ui->tvCards->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this] {
-        if (m_cardEditMode != CardEditMode::None) return;
-        refreshButtons();
-        refreshPreview();
-    });
+    m_foldersModel->setFolders(m_db.folders);
 
-    // --- Folder actions ---
-    connect(ui->btnAddFolder, &QToolButton::clicked, this, [this] {
-        openFolderCreate();
-    });
+    m_cardsModel->setDatabase(m_db);
+    m_cardsModel->setSearchQuery(ui->leSearch->text());
+    m_cardsModel->setFolderFilter(prevFolder);
 
-    connect(ui->btnFolderMore, &QToolButton::clicked, this, [this] {
-        showFolderMenu(menuAnchorBelow(ui->btnFolderMore));
-    });
-
-    connect(ui->lvFolders->viewport(), &QWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
-        const QModelIndex idx = ui->lvFolders->indexAt(pos);
-        if (idx.isValid()) ui->lvFolders->setCurrentIndex(idx);
-        showFolderMenu(ui->lvFolders->viewport()->mapToGlobal(pos));
-    });
-
-    connect(ui->lvFolders, &QListView::doubleClicked, this, [this](const QModelIndex& idx) {
-        if (!idx.isValid()) return;
-        const auto id = selectedFolderId();
-        if (!id.isValid()) return; // "Все карточки" не переименовываем
-        openFolderRename(id);
-    });
-
-    connect(ui->btnFolderSave, &QToolButton::clicked, this, [this] { commitFolderEditor(); });
-    connect(ui->btnFolderCancel, &QToolButton::clicked, this, [this] { closeFolderEditor(); });
-    connect(ui->leFolderName, &QLineEdit::returnPressed, this, [this] { commitFolderEditor(); });
-    connect(ui->leFolderName, &QLineEdit::textChanged, this, [this] { refreshButtons(); });
-
-    // --- Card actions ---
-    connect(ui->btnAddCard, &QToolButton::clicked, this, [this] { openCardCreate(); });
-    connect(ui->btnEditCard, &QToolButton::clicked, this, [this] {
-        const auto id = selectedCardId();
-        if (!id.isValid()) return;
-        openCardEdit(id);
-    });
-    connect(ui->btnDeleteCard, &QToolButton::clicked, this, [this] {
-        const auto id = selectedCardId();
-        if (!id.isValid()) return;
-        requestDeleteCard(id);
-    });
-
-    connect(ui->tvCards, &QTableView::doubleClicked, this, [this](const QModelIndex&) {
-        const auto id = selectedCardId();
-        if (!id.isValid()) return;
-        openCardEdit(id);
-    });
-
-    connect(ui->tvCards->viewport(), &QWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
-        const QModelIndex idx = ui->tvCards->indexAt(pos);
-        if (idx.isValid()) ui->tvCards->setCurrentIndex(idx);
-        showCardMenu(ui->tvCards->viewport()->mapToGlobal(pos));
-    });
-
-    connect(ui->btnCardSave, &QToolButton::clicked, this, [this] { commitCardEditor(); });
-    connect(ui->btnCardCancel, &QToolButton::clicked, this, [this] { closeCardEditor(); });
-
-    connect(ui->leCardQuestion, &QLineEdit::textChanged, this, [this] { refreshButtons(); });
-    connect(ui->pteCardAnswer, &QPlainTextEdit::textChanged, this, [this] { refreshButtons(); });
-
-    connect(ui->btnStartReview, &QPushButton::clicked, this, [this] {
-        if (isEditing()) return;
-        emit startReviewRequested(selectedFolderId());
-    });
+    // Restore folder selection if possible
+    int row = m_foldersModel->rowForId(prevFolder);
+    if (row < 0) row = 0;
+    ui->lvFolders->setCurrentIndex(m_foldersModel->index(row, 0));
 }
 
-void LibraryPage::setDatabase(rewise::storage::Database db) {
-    const auto prevFolder = selectedFolderId();
-    const auto prevCard   = selectedCardId();
-
-    m_db = std::move(db);
-
-    m_folderModel->setFolders(m_db.folders);
-    m_cardModel->setDatabase(m_db);
-    m_cardModel->setFolderFilter(prevFolder);
-
-    // restore folder selection
-    const int folderRow = m_folderModel->rowForId(prevFolder);
-    if (folderRow >= 0) {
-        ui->lvFolders->setCurrentIndex(m_folderModel->index(folderRow, 0));
-    } else {
-        if (m_folderModel->includeAllItem()) {
-            ui->lvFolders->setCurrentIndex(m_folderModel->index(0, 0));
-        } else if (m_folderModel->rowCount() > 0) {
-            ui->lvFolders->setCurrentIndex(m_folderModel->index(0, 0));
-        }
-    }
-
-    // restore card selection
-    const int cardRow = m_cardModel->rowForCardId(prevCard);
-    if (cardRow >= 0) {
-        ui->tvCards->selectRow(cardRow);
-        ui->tvCards->scrollTo(m_cardModel->index(cardRow, 0));
-    }
-
-    refreshButtons();
-    refreshPreview();
-}
-
-void LibraryPage::showError(const QString& text) {
-    if (m_msg) m_msg->showMessage(rewise::ui::widgets::InlineMessageWidget::Kind::Error, text);
-}
-
-void LibraryPage::showInfo(const QString& text) {
-    if (m_msg) m_msg->showMessage(rewise::ui::widgets::InlineMessageWidget::Kind::Info, text);
-}
-
-void LibraryPage::clearMessage() {
-    if (m_msg) m_msg->clearMessage();
-}
-
-rewise::domain::Id LibraryPage::selectedFolderId() const {
+rewise::domain::Id LibraryPage::currentFolderId() const {
     const QModelIndex idx = ui->lvFolders->currentIndex();
-    if (!idx.isValid()) return rewise::domain::Id{}; // all
-    return m_folderModel->idAtRow(idx.row());
+    if (!idx.isValid()) return {};
+    return m_foldersModel->idAtRow(idx.row()); // invalid => "All cards"
 }
 
-rewise::domain::Id LibraryPage::selectedCardId() const {
-    const QModelIndex idx = ui->tvCards->currentIndex();
-    if (!idx.isValid()) return rewise::domain::Id{};
-    return m_cardModel->cardIdAtRow(idx.row());
-}
-
-void LibraryPage::applyEditState() {
-    ui->folderEditor->setVisible(m_folderEditMode != FolderEditMode::None);
-
-    if (m_cardEditMode != CardEditMode::None) {
-        ui->detailsStack->setCurrentWidget(ui->editorPage);
-    } else {
-        ui->detailsStack->setCurrentWidget(ui->previewPage);
-    }
-}
-
-void LibraryPage::refreshButtons() {
-    const bool editingFolder = (m_folderEditMode != FolderEditMode::None);
-    const bool editingCard   = (m_cardEditMode != CardEditMode::None);
-    const bool editingAny    = editingFolder || editingCard;
-
-    // Lock navigation while editing to reduce accidental context changes.
-    ui->lvFolders->setEnabled(!editingAny);
-    ui->tvCards->setEnabled(!editingAny);
-    ui->leSearch->setEnabled(!editingAny);
-    ui->btnStartReview->setEnabled(!editingAny && m_cardModel->rowCount() > 0);
-
-    ui->btnAddFolder->setEnabled(!editingAny);
-    ui->btnFolderMore->setEnabled(!editingAny);
-
-    ui->btnAddCard->setEnabled(!editingAny);
-    const auto cardId = selectedCardId();
-    const bool hasCard = cardId.isValid();
-    ui->btnEditCard->setEnabled(!editingAny && hasCard);
-    ui->btnDeleteCard->setEnabled(!editingAny && hasCard);
-
-    // Inline editors validation.
-    if (editingFolder) {
-        const bool ok = !ui->leFolderName->text().trimmed().isEmpty();
-        ui->btnFolderSave->setEnabled(ok);
-    }
-    if (editingCard) {
-        const bool ok = !ui->leCardQuestion->text().trimmed().isEmpty()
-                        && !ui->pteCardAnswer->toPlainText().trimmed().isEmpty();
-        ui->btnCardSave->setEnabled(ok);
-    }
-}
-
-void LibraryPage::refreshPreview() {
-    if (m_cardEditMode != CardEditMode::None) return;
-
-    const auto cardId = selectedCardId();
-    const auto* c = m_db.cardById(cardId);
-
-    if (!c) {
-        ui->tbPreview->setHtml("<div style='opacity:0.65'>Выберите карточку, чтобы увидеть детали.</div>");
-        return;
-    }
-
-    const QString html =
-        "<div style='white-space: pre-wrap; line-height:1.35;'>"
-          "<div style='font-weight:700; font-size:15px; margin-bottom:6px;'>" + c->question.toHtmlEscaped() + "</div>"
-          "<div style='opacity:0.75; font-weight:600; margin-bottom:4px;'>Эталонный ответ</div>"
-          "<div>" + c->answer.toHtmlEscaped() + "</div>"
-        "</div>";
-
-    ui->tbPreview->setHtml(html);
-}
-
-// ---------------- Folder inline editor ----------------
-
-void LibraryPage::openFolderCreate() {
-    clearMessage();
+void LibraryPage::openFolderEditorCreate() {
     m_folderEditMode = FolderEditMode::Create;
-    m_folderEditId = {};
+    m_editFolderId = {};
 
+    ui->folderEditor->setVisible(true);
     ui->leFolderName->clear();
     ui->leFolderName->setFocus();
-
-    applyEditState();
-    refreshButtons();
 }
 
-void LibraryPage::openFolderRename(const rewise::domain::Id& folderId) {
-    if (!folderId.isValid()) return;
-    const auto* f = m_db.folderById(folderId);
-    if (!f) return;
-
-    clearMessage();
+void LibraryPage::openFolderEditorRename(const rewise::domain::Folder& f) {
     m_folderEditMode = FolderEditMode::Rename;
-    m_folderEditId = folderId;
+    m_editFolderId = f.id;
 
-    ui->leFolderName->setText(f->name);
-    ui->leFolderName->selectAll();
+    ui->folderEditor->setVisible(true);
+    ui->leFolderName->setText(f.name);
     ui->leFolderName->setFocus();
-
-    applyEditState();
-    refreshButtons();
+    ui->leFolderName->selectAll();
 }
 
 void LibraryPage::closeFolderEditor() {
     m_folderEditMode = FolderEditMode::None;
-    m_folderEditId = {};
+    m_editFolderId = {};
 
+    ui->folderEditor->setVisible(false);
     ui->leFolderName->clear();
-
-    applyEditState();
-    refreshButtons();
 }
 
 void LibraryPage::commitFolderEditor() {
     const QString name = ui->leFolderName->text().trimmed();
     if (name.isEmpty()) {
-        showError("Название папки не может быть пустым.");
+        showError(QStringLiteral("Название папки не может быть пустым."));
         return;
     }
 
-    const auto mode = m_folderEditMode;
-    const auto id   = m_folderEditId;
-
-    closeFolderEditor();
-
-    if (mode == FolderEditMode::Create) {
+    if (m_folderEditMode == FolderEditMode::Create) {
         emit folderCreateRequested(name);
-    } else if (mode == FolderEditMode::Rename) {
-        if (!id.isValid()) return;
-        emit folderRenameRequested(id, name);
-    }
-}
-
-void LibraryPage::showFolderMenu(const QPoint& globalPos) {
-    if (m_folderEditMode != FolderEditMode::None || m_cardEditMode != CardEditMode::None) return;
-
-    QMenu menu(this);
-
-    auto* aNew = menu.addAction("Новая папка…");
-    auto* aRename = menu.addAction("Переименовать…");
-    auto* aDelete = menu.addAction("Удалить…");
-
-    const auto folderId = selectedFolderId();
-    const bool hasFolder = folderId.isValid(); // invalid = "Все карточки"
-    aRename->setEnabled(hasFolder);
-    aDelete->setEnabled(hasFolder);
-
-    QAction* act = menu.exec(globalPos);
-    if (!act) return;
-
-    if (act == aNew) {
-        openFolderCreate();
+        closeFolderEditor();
         return;
     }
 
-    if (!hasFolder) return;
-
-    if (act == aRename) {
-        openFolderRename(folderId);
+    if (m_folderEditMode == FolderEditMode::Rename) {
+        if (!m_editFolderId.isValid()) {
+            closeFolderEditor();
+            return;
+        }
+        emit folderRenameRequested(m_editFolderId, name);
+        closeFolderEditor();
         return;
     }
-
-    if (act == aDelete) {
-        const auto* f = m_db.folderById(folderId);
-        if (!f) return;
-
-        const int cardCount = std::count_if(m_db.cards.begin(), m_db.cards.end(),
-                                            [&](const rewise::domain::Card& c) { return c.folderId == folderId; });
-
-        const auto ans = QMessageBox::question(this,
-                                              "Удалить папку?",
-                                              QString("Удалить папку \"%1\"?\nКарточек внутри: %2.\n\nКарточки будут перенесены в Default.")
-                                                  .arg(f->name)
-                                                  .arg(cardCount),
-                                              QMessageBox::Yes | QMessageBox::No,
-                                              QMessageBox::No);
-        if (ans != QMessageBox::Yes) return;
-
-        emit folderDeleteRequested(folderId);
-    }
 }
 
-// ---------------- Card inline editor ----------------
+void LibraryPage::openNewCardPopup() {
+    const auto folderId = currentFolderId();
 
-void LibraryPage::openCardCreate() {
-    clearMessage();
-    m_cardEditMode = CardEditMode::Create;
-    m_cardEditId = {};
+    // Anchor near + button
+    const QPoint globalAnchor = ui->btnNewCard->mapToGlobal(QPoint(ui->btnNewCard->width() / 2,
+                                                                 ui->btnNewCard->height() / 2));
 
-    ui->lblEditorTitle->setText("Новая карточка");
-    ui->leCardQuestion->clear();
-    ui->pteCardAnswer->clear();
-    ui->leCardQuestion->setFocus();
+    closeCardPopup();
 
-    applyEditState();
-    refreshButtons();
+    m_cardPopup = new rewise::ui::widgets::CardPopupDialog(window());
+    m_cardPopup->card()->startCreate(folderId);
+
+    // Save / delete routing
+    connect(m_cardPopup->card(), &rewise::ui::widgets::CardWidget::saveRequested,
+            this, [this](const rewise::domain::Id& cardId,
+                         const rewise::domain::Id& folderCtx,
+                         const QString& q,
+                         const QString& a) {
+                if (q.trimmed().isEmpty() || a.trimmed().isEmpty()) {
+                    showError(QStringLiteral("Вопрос и ответ не должны быть пустыми."));
+                    return;
+                }
+
+                if (!cardId.isValid()) {
+                    emit cardCreateRequested(folderCtx, q, a);
+                } else {
+                    emit cardUpdateRequested(cardId, q, a);
+                }
+
+                closeCardPopup();
+            });
+
+    connect(m_cardPopup->card(), &rewise::ui::widgets::CardWidget::closeRequested,
+            this, [this] { closeCardPopup(); });
+
+    m_cardPopup->popupNear(globalAnchor);
 }
 
-void LibraryPage::openCardEdit(const rewise::domain::Id& cardId) {
-    if (!cardId.isValid()) return;
-    const auto* c = m_db.cardById(cardId);
-    if (!c) return;
+void LibraryPage::openCardPopup(const rewise::domain::Card& card, const QPoint& globalAnchor) {
+    closeCardPopup();
 
-    clearMessage();
-    m_cardEditMode = CardEditMode::Edit;
-    m_cardEditId = cardId;
+    m_cardPopup = new rewise::ui::widgets::CardPopupDialog(window());
+    m_cardPopup->card()->setCard(card);
 
-    ui->lblEditorTitle->setText("Редактирование");
-    ui->leCardQuestion->setText(c->question);
-    ui->leCardQuestion->selectAll();
-    ui->pteCardAnswer->setPlainText(c->answer);
+    connect(m_cardPopup->card(), &rewise::ui::widgets::CardWidget::saveRequested,
+            this, [this](const rewise::domain::Id& cardId,
+                         const rewise::domain::Id& folderCtx,
+                         const QString& q,
+                         const QString& a) {
+                Q_UNUSED(folderCtx);
 
-    ui->leCardQuestion->setFocus();
+                if (!cardId.isValid()) return;
+                if (q.trimmed().isEmpty() || a.trimmed().isEmpty()) {
+                    showError(QStringLiteral("Вопрос и ответ не должны быть пустыми."));
+                    return;
+                }
 
-    applyEditState();
-    refreshButtons();
+                emit cardUpdateRequested(cardId, q, a);
+                closeCardPopup();
+            });
+
+    connect(m_cardPopup->card(), &rewise::ui::widgets::CardWidget::deleteRequested,
+            this, [this](const rewise::domain::Id& id) {
+                if (!m_notify) {
+                    emit cardDeleteRequested(id);
+                    closeCardPopup();
+                    return;
+                }
+
+                auto* toast = m_notify->showConfirm(
+                    QStringLiteral("Удалить карточку?"),
+                    QStringLiteral("Удалить"),
+                    QStringLiteral("Отмена"));
+
+                connect(toast, &rewise::ui::widgets::ToastWidget::accepted, this, [this, id] {
+                    emit cardDeleteRequested(id);
+                    closeCardPopup();
+                });
+            });
+
+    connect(m_cardPopup->card(), &rewise::ui::widgets::CardWidget::closeRequested,
+            this, [this] { closeCardPopup(); });
+
+    m_cardPopup->popupNear(globalAnchor);
 }
 
-void LibraryPage::closeCardEditor() {
-    m_cardEditMode = CardEditMode::None;
-    m_cardEditId = {};
+void LibraryPage::closeCardPopup() {
+    if (!m_cardPopup) return;
 
-    ui->leCardQuestion->clear();
-    ui->pteCardAnswer->clear();
-
-    applyEditState();
-    refreshButtons();
-    refreshPreview();
+    m_cardPopup->close();
+    m_cardPopup->deleteLater();
+    m_cardPopup = nullptr;
 }
 
-void LibraryPage::commitCardEditor() {
-    const QString q = ui->leCardQuestion->text().trimmed();
-    const QString a = ui->pteCardAnswer->toPlainText().trimmed();
-
-    if (q.isEmpty()) {
-        showError("Вопрос не может быть пустым.");
+void LibraryPage::showError(const QString& text) {
+    if (m_notify) {
+        m_notify->showError(text);
         return;
     }
-    if (a.isEmpty()) {
-        showError("Ответ не может быть пустым.");
-        return;
-    }
-
-    const auto mode = m_cardEditMode;
-    const auto id   = m_cardEditId;
-
-    closeCardEditor();
-
-    if (mode == CardEditMode::Create) {
-        emit cardCreateRequested(selectedFolderId(), q, a);
-    } else if (mode == CardEditMode::Edit) {
-        if (!id.isValid()) return;
-        emit cardUpdateRequested(id, q, a);
-    }
 }
 
-void LibraryPage::requestDeleteCard(const rewise::domain::Id& cardId) {
-    if (!cardId.isValid()) return;
-
-    const auto ans = QMessageBox::question(this,
-                                          "Удалить карточку?",
-                                          "Удалить выбранную карточку?",
-                                          QMessageBox::Yes | QMessageBox::No,
-                                          QMessageBox::No);
-    if (ans != QMessageBox::Yes) return;
-
-    emit cardDeleteRequested(cardId);
-}
-
-void LibraryPage::showCardMenu(const QPoint& globalPos) {
-    if (m_folderEditMode != FolderEditMode::None || m_cardEditMode != CardEditMode::None) return;
-
-    QMenu menu(this);
-
-    auto* aNew   = menu.addAction("Новая карточка…");
-    auto* aEdit  = menu.addAction("Редактировать…");
-    auto* aDel   = menu.addAction("Удалить…");
-
-    const auto cardId = selectedCardId();
-    const bool hasCard = cardId.isValid();
-    aEdit->setEnabled(hasCard);
-    aDel->setEnabled(hasCard);
-
-    QAction* act = menu.exec(globalPos);
-    if (!act) return;
-
-    if (act == aNew) {
-        openCardCreate();
-        return;
-    }
-
-    if (!hasCard) return;
-
-    if (act == aEdit) {
-        openCardEdit(cardId);
-        return;
-    }
-
-    if (act == aDel) {
-        requestDeleteCard(cardId);
+void LibraryPage::showInfo(const QString& text) {
+    if (m_notify) {
+        m_notify->showInfo(text);
         return;
     }
 }
