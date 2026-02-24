@@ -1,8 +1,8 @@
 #ifndef REWISE_UI_PAGES_LIBRARYPAGE_H
 #define REWISE_UI_PAGES_LIBRARYPAGE_H
 
-#include "domain/Id.h"
 #include "storage/Database.h"
+#include "domain/Id.h"
 
 #include <QWidget>
 
@@ -13,7 +13,6 @@ QT_END_NAMESPACE
 namespace rewise::ui::widgets {
 class FolderListModel;
 class CardTableModel;
-class NotificationCenter;
 class CardPopupDialog;
 }
 
@@ -25,50 +24,52 @@ public:
     explicit LibraryPage(QWidget* parent = nullptr);
     ~LibraryPage() override;
 
-    void setNotifier(rewise::ui::widgets::NotificationCenter* n);
+    void setDatabase(rewise::storage::Database db);
 
-    void setDatabase(const rewise::storage::Database& db);
+    // Optional: if set, messages can be routed to notifier by method name ("showError"/"showInfo")
+    void setNotifier(QObject* notify);
 
-signals:
-    void folderCreateRequested(const QString& name);
-    void folderRenameRequested(const rewise::domain::Id& id, const QString& newName);
-    void folderDeleteRequested(const rewise::domain::Id& id);
-
-    void cardCreateRequested(const rewise::domain::Id& folderId, const QString& question, const QString& answer);
-    void cardUpdateRequested(const rewise::domain::Id& cardId, const QString& question, const QString& answer);
-    void cardDeleteRequested(const rewise::domain::Id& cardId);
-
-    void startReviewRequested(const rewise::domain::Id& folderId);
-
-private:
-    enum class FolderEditMode { None, Create, Rename };
-
-    rewise::domain::Id currentFolderId() const;
-
-    void openFolderEditorCreate();
-    void openFolderEditorRename(const rewise::domain::Folder& f);
-    void closeFolderEditor();
-    void commitFolderEditor();
-
-    void openNewCardPopup();
-    void openCardPopup(const rewise::domain::Card& card, const QPoint& globalAnchor);
-    void closeCardPopup();
+    rewise::domain::Id selectedFolderId() const; // invalid => all
+    rewise::domain::Id selectedCardId() const;   // invalid => none
 
     void showError(const QString& text);
     void showInfo(const QString& text);
+
+signals:
+    void folderCreateRequested(const QString& name);
+    void folderRenameRequested(const rewise::domain::Id& folderId, const QString& newName);
+    void folderDeleteRequested(const rewise::domain::Id& folderId);
+
+    void cardCreateRequested(const rewise::domain::Id& folderId,
+                             const QString& question,
+                             const QString& answer);
+    void cardUpdateRequested(const rewise::domain::Id& cardId,
+                             const QString& question,
+                             const QString& answer);
+    void cardDeleteRequested(const rewise::domain::Id& cardId);
+
+    void startReviewRequested(const rewise::domain::Id& folderId); // invalid => all
+
+private:
+    void wireUi();
+    void refreshFromSelection();
+
+    void requestCreateFolder();
+    void requestRenameFolder();
+    void requestDeleteFolder();
+
+    void openCreateCard();
+    void openEditCard(const rewise::domain::Id& cardId);
 
 private:
     Ui::LibraryPage* ui = nullptr;
 
     rewise::storage::Database m_db;
 
-    rewise::ui::widgets::NotificationCenter* m_notify = nullptr;
-    rewise::ui::widgets::FolderListModel* m_foldersModel = nullptr;
-    rewise::ui::widgets::CardTableModel* m_cardsModel = nullptr;
+    rewise::ui::widgets::FolderListModel* m_folderModel = nullptr;
+    rewise::ui::widgets::CardTableModel* m_cardModel = nullptr;
 
-    FolderEditMode m_folderEditMode = FolderEditMode::None;
-    rewise::domain::Id m_editFolderId;
-
+    QObject* m_notify = nullptr;
     rewise::ui::widgets::CardPopupDialog* m_cardPopup = nullptr;
 };
 

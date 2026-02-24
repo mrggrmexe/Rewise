@@ -7,12 +7,11 @@
 #include <QWidget>
 
 class QLabel;
-class QTextBrowser;
-class QLineEdit;
 class QPlainTextEdit;
 class QPushButton;
-class QStackedWidget;
 class QToolButton;
+class QSplitter;
+class QStackedWidget;
 
 namespace rewise::ui::widgets {
 
@@ -21,104 +20,81 @@ class DiffTextWidget;
 class CardWidget final : public QWidget {
     Q_OBJECT
 public:
-    enum class Mode { LibraryView, LibraryEdit, Review };
-
     explicit CardWidget(QWidget* parent = nullptr);
-    ~CardWidget() override = default;
 
-    void setElevated(bool elevated);
-    void setHeaderVisible(bool visible);
-    void setCloseButtonVisible(bool visible);
+    // Presentation controls (used by ReviewPage and popup dialog)
+    void setHeaderVisible(bool v);
+    void setCloseButtonVisible(bool v);
+    void setElevated(bool v);
 
-    void setMode(Mode m);
-    Mode mode() const { return m_mode; }
+    // Layout controls
+    void setWideLayout(bool enabled);
 
-    // Library use-cases
-    void setCard(const rewise::domain::Card& card);              // loads & shows in view mode
-    void startEdit(const rewise::domain::Card& card);            // loads & opens edit mode
-    void startCreate(const rewise::domain::Id& folderContext);   // opens edit mode with empty fields
+    // Library mode
+    void startCreate(const rewise::domain::Id& folderId);
+    void setCard(const rewise::domain::Card& card);
 
-    rewise::domain::Id cardId() const { return m_cardId; }
-    rewise::domain::Id folderContext() const { return m_folderCtx; }
-
-    // Review use-cases
+    // Review mode
     void setReviewCard(const rewise::domain::Card& card);
-    void clearReview();
 
 signals:
+    // Library
+    void saveRequested(const rewise::domain::Card& card);
+    void deleteRequested(const rewise::domain::Id& cardId);
     void closeRequested();
 
-    void saveRequested(const rewise::domain::Id& cardId,
-                       const rewise::domain::Id& folderCtx,
-                       const QString& question,
-                       const QString& answer);
-
-    void deleteRequested(const rewise::domain::Id& cardId);
-
-    void nextRequested(); // review navigation
+    // Review
+    void nextRequested();
 
 private:
-    void buildUi();
+    enum class Mode { View, Edit, Create, Review };
 
-    void setHeaderTitle(const QString& title);
+    void setMode(Mode m);
+    void rebuildUiForMode();
 
-    void enterLibraryViewMode();
-    void enterLibraryEditMode(bool isCreate);
+    void applyCardToEditors();
+    void collectEditorsToCard();
 
     void resetReviewUi();
-    void applyCardToUi();
-
-    void onEdit();
-    void onDelete();
-    void onSave();
-    void onCancel();
-
-    void onCheck();
-    void onNext();
+    void doCheck();
 
 private:
-    Mode m_mode = Mode::LibraryView;
+    Mode m_mode = Mode::View;
+    rewise::domain::Card m_card;
 
-    bool m_elevated = false;
-
-    rewise::domain::Id m_cardId;
-    rewise::domain::Id m_folderCtx;
-
-    QString m_question;
-    QString m_answer;
-
-    // Header
-    QWidget* m_header = nullptr;
-    QLabel* m_headerTitle = nullptr;
+    QWidget* m_headerWidget = nullptr;
+    QLabel* m_title = nullptr;
     QToolButton* m_btnClose = nullptr;
 
     QStackedWidget* m_stack = nullptr;
 
-    // Library view
-    QWidget* m_viewPage = nullptr;
-    QTextBrowser* m_viewQuestion = nullptr;
-    QTextBrowser* m_viewAnswer = nullptr;
-    QPushButton* m_btnEdit = nullptr;
-    QPushButton* m_btnDelete = nullptr;
+    // Shared: editor/view layout
+    QSplitter* m_split = nullptr;
 
-    // Library edit
-    QWidget* m_editPage = nullptr;
-    QLabel* m_editTitle = nullptr;
-    QLineEdit* m_leQuestion = nullptr;
-    QPlainTextEdit* m_pteAnswer = nullptr;
+    QLabel* m_lblQuestion = nullptr;
+    QPlainTextEdit* m_question = nullptr;
+
+    QLabel* m_lblAnswer = nullptr;
+    QPlainTextEdit* m_answer = nullptr;
+
+    // Footer buttons (library)
+    QWidget* m_footerWidget = nullptr;
+    QPushButton* m_btnDelete = nullptr;
+    QPushButton* m_btnEdit = nullptr;
     QPushButton* m_btnSave = nullptr;
     QPushButton* m_btnCancel = nullptr;
 
-    // Review
+    // Review widgets
     QWidget* m_reviewPage = nullptr;
-    QTextBrowser* m_reviewQuestion = nullptr;
-    QPlainTextEdit* m_reviewInput = nullptr;
-    QPushButton* m_btnCheck = nullptr;
-    QPushButton* m_btnNext = nullptr;
+    QLabel* m_lblYourAnswer = nullptr;
+    QPlainTextEdit* m_input = nullptr;
     QLabel* m_lblPercent = nullptr;
     DiffTextWidget* m_diff = nullptr;
+    QWidget* m_reviewButtons = nullptr;
+    QPushButton* m_btnCheck = nullptr;
+    QPushButton* m_btnNext = nullptr;
 
-    bool m_reviewChecked = false;
+    bool m_elevated = false;
 };
 
 } // namespace rewise::ui::widgets

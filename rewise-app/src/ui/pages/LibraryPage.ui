@@ -6,291 +6,281 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>980</width>
-    <height>680</height>
+    <width>1200</width>
+    <height>720</height>
    </rect>
   </property>
+  <property name="windowTitle">
+   <string>LibraryPage</string>
+  </property>
   <layout class="QVBoxLayout" name="rootLayout">
-   <property name="leftMargin">
-    <number>18</number>
-   </property>
-   <property name="topMargin">
-    <number>16</number>
-   </property>
-   <property name="rightMargin">
-    <number>18</number>
-   </property>
-   <property name="bottomMargin">
-    <number>18</number>
-   </property>
    <property name="spacing">
     <number>14</number>
    </property>
-
+   <property name="leftMargin">
+    <number>24</number>
+   </property>
+   <property name="topMargin">
+    <number>22</number>
+   </property>
+   <property name="rightMargin">
+    <number>24</number>
+   </property>
+   <property name="bottomMargin">
+    <number>24</number>
+   </property>
    <item>
-    <layout class="QHBoxLayout" name="topBar">
-     <property name="spacing">
-      <number>10</number>
+    <widget class="QWidget" name="wTopBar">
+     <property name="minimumHeight">
+      <number>56</number>
      </property>
-     <item>
-      <widget class="QLabel" name="lblTitle">
-       <property name="text">
-        <string>Rewise</string>
-       </property>
-       <property name="heading" stdset="0">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="topSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-
-   <item>
-    <widget class="QSplitter" name="splitMain">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+     <property name="maximumHeight">
+      <number>56</number>
      </property>
-
-     <widget class="QWidget" name="foldersPanel">
-      <layout class="QVBoxLayout" name="foldersLayout">
-       <property name="leftMargin">
-        <number>14</number>
-       </property>
-       <property name="topMargin">
-        <number>14</number>
-       </property>
-       <property name="rightMargin">
-        <number>14</number>
-       </property>
-       <property name="bottomMargin">
-        <number>14</number>
-       </property>
-       <property name="spacing">
-        <number>10</number>
-       </property>
-
-       <item>
-        <layout class="QHBoxLayout" name="foldersHeader">
+     <layout class="QHBoxLayout" name="topBarLayout">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="lblTitle">
+        <property name="text">
+         <string>Rewise</string>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>20</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="spacerTop">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>10</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QWidget" name="wMessageHost">
+        <layout class="QVBoxLayout" name="messageHostLayout">
          <property name="spacing">
-          <number>8</number>
+          <number>6</number>
          </property>
-         <item>
-          <widget class="QLabel" name="lblFolders">
-           <property name="text">
-            <string>Папки</string>
-           </property>
-           <property name="muted" stdset="0">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="foldersSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QToolButton" name="btnNewFolder">
-           <property name="text">
-            <string>＋</string>
-           </property>
-           <property name="toolTip">
-            <string>Новая папка</string>
-           </property>
-           <property name="autoRaise">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QToolButton" name="btnFolderMore">
-           <property name="text">
-            <string>⋯</string>
-           </property>
-           <property name="toolTip">
-            <string>Действия</string>
-           </property>
-           <property name="autoRaise">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
         </layout>
-       </item>
-
-       <item>
-        <widget class="QWidget" name="folderEditor">
-         <property name="visible">
-          <bool>false</bool>
-         </property>
-         <layout class="QHBoxLayout" name="folderEditorLayout">
-          <property name="leftMargin">
-           <number>0</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="contentLayout">
+     <property name="spacing">
+      <number>16</number>
+     </property>
+     <item>
+      <widget class="QWidget" name="wFoldersPanel">
+       <property name="minimumWidth">
+        <number>260</number>
+       </property>
+       <property name="maximumWidth">
+        <number>320</number>
+       </property>
+       <layout class="QVBoxLayout" name="foldersLayout">
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <layout class="QHBoxLayout" name="foldersHeaderLayout">
           <property name="spacing">
-           <number>8</number>
+           <number>10</number>
           </property>
           <item>
-           <widget class="QLineEdit" name="leFolderName">
-            <property name="placeholderText">
-             <string>Название папки…</string>
+           <widget class="QLabel" name="lblFolders">
+            <property name="text">
+             <string>Папки</string>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>14</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="btnFolderCommit">
-            <property name="text">
-             <string>OK</string>
+           <spacer name="spacerFoldersHeader">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
-            <property name="primary" stdset="0">
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>10</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btnAddFolder">
+            <property name="text">
+             <string>+</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btnFolderMenu">
+            <property name="text">
+             <string>⋯</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QListView" name="lvFolders">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="uniformItemSizes">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QWidget" name="wCardsPanel">
+       <layout class="QVBoxLayout" name="cardsLayout">
+        <property name="spacing">
+         <number>12</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <layout class="QHBoxLayout" name="cardsTopRow">
+          <property name="spacing">
+           <number>12</number>
+          </property>
+          <item>
+           <widget class="QLineEdit" name="leSearch">
+            <property name="placeholderText">
+             <string>Поиск…</string>
+            </property>
+            <property name="clearButtonEnabled">
              <bool>true</bool>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="btnFolderCancel">
+           <widget class="QToolButton" name="btnAddCard">
             <property name="text">
-             <string>Отмена</string>
+             <string>+</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnStartReview">
+            <property name="text">
+             <string>Повторять</string>
             </property>
            </widget>
           </item>
          </layout>
-        </widget>
-       </item>
-
-       <item>
-        <widget class="QListView" name="lvFolders">
-         <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
-         </property>
-         <property name="uniformItemSizes">
-          <bool>true</bool>
-         </property>
-         <property name="selectionMode">
-          <enum>QAbstractItemView::SingleSelection</enum>
-         </property>
-         <property name="contextMenuPolicy">
-          <enum>Qt::CustomContextMenu</enum>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-
-     <widget class="QWidget" name="cardsPanel">
-      <layout class="QVBoxLayout" name="cardsLayout">
-       <property name="leftMargin">
-        <number>14</number>
-       </property>
-       <property name="topMargin">
-        <number>14</number>
-       </property>
-       <property name="rightMargin">
-        <number>14</number>
-       </property>
-       <property name="bottomMargin">
-        <number>14</number>
-       </property>
-       <property name="spacing">
-        <number>10</number>
-       </property>
-
-       <item>
-        <layout class="QHBoxLayout" name="cardsHeader">
-         <property name="spacing">
-          <number>10</number>
-         </property>
-         <item>
-          <widget class="QLineEdit" name="leSearch">
-           <property name="placeholderText">
-            <string>Поиск…</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QToolButton" name="btnNewCard">
-           <property name="text">
-            <string>＋</string>
-           </property>
-           <property name="toolTip">
-            <string>Новая карточка</string>
-           </property>
-           <property name="autoRaise">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="btnReview">
-           <property name="text">
-            <string>Повторять</string>
-           </property>
-           <property name="primary" stdset="0">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-
-       <item>
-        <widget class="QTableView" name="tvCards">
-         <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
-         </property>
-         <property name="selectionBehavior">
-          <enum>QAbstractItemView::SelectRows</enum>
-         </property>
-         <property name="selectionMode">
-          <enum>QAbstractItemView::SingleSelection</enum>
-         </property>
-         <property name="alternatingRowColors">
-          <bool>true</bool>
-         </property>
-         <property name="showGrid">
-          <bool>false</bool>
-         </property>
-         <property name="sortingEnabled">
-          <bool>true</bool>
-         </property>
-         <property name="contextMenuPolicy">
-          <enum>Qt::CustomContextMenu</enum>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </widget>
+        </item>
+        <item>
+         <widget class="QTableView" name="tvCards">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="showGrid">
+           <bool>false</bool>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

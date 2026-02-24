@@ -1,89 +1,86 @@
 #include "CardPopupDialog.h"
 #include "CardWidget.h"
 
+#include <QApplication>
 #include <QGuiApplication>
-#include <QPropertyAnimation>
+#include <QGraphicsDropShadowEffect>
+#include <QColor>
+#include <QKeyEvent>
 #include <QScreen>
-#include <QShowEvent>
 #include <QVBoxLayout>
+#include <QCursor>
 
 namespace rewise::ui::widgets {
 
 CardPopupDialog::CardPopupDialog(QWidget* parent)
     : QDialog(parent)
 {
-    setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
+    setObjectName("CardPopupDialog");
+
+    setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+    setModal(true);
     setAttribute(Qt::WA_TranslucentBackground, true);
 
-    auto* root = new QVBoxLayout(this);
-    root->setContentsMargins(18, 18, 18, 18);
-    root->setSpacing(0);
+    auto* outer = new QVBoxLayout(this);
+    outer->setContentsMargins(24, 24, 24, 24);
+    outer->setSpacing(0);
 
-    m_card = new CardWidget(this);
-    m_card->setHeaderVisible(true);
-    m_card->setElevated(true);
-    m_card->setCloseButtonVisible(true);
+    m_frame = new QWidget(this);
+    m_frame->setObjectName("cardFrame");
 
-    connect(m_card, &CardWidget::closeRequested, this, &QDialog::reject);
+    auto* shadow = new QGraphicsDropShadowEffect(m_frame);
+    shadow->setBlurRadius(34);
+    shadow->setOffset(0, 10);
+    shadow->setColor(QColor(0, 0, 0, 80));
+    m_frame->setGraphicsEffect(shadow);
 
-    root->addWidget(m_card);
-    setLayout(root);
+    auto* frameLayout = new QVBoxLayout(m_frame);
+    frameLayout->setContentsMargins(18, 18, 18, 18);
+    frameLayout->setSpacing(10);
 
-    resize(620, 520);
+    m_card = new CardWidget(m_frame);
+    m_card->setWideLayout(true);
+
+    frameLayout->addWidget(m_card);
+    outer->addWidget(m_frame);
+
+    m_frame->setStyleSheet(
+        "#cardFrame {"
+        "  background: rgba(255, 255, 255, 0.94);"
+        "  border: 1px solid rgba(88, 110, 160, 0.22);"
+        "  border-radius: 18px;"
+        "}"
+    );
+
+    setFixedSize(900, 460);
 }
 
-void CardPopupDialog::popupNear(const QPoint& globalAnchor) {
+void CardPopupDialog::openCentered() {
     adjustSize();
 
-    const QSize s = size();
-
-    QScreen* screen = QGuiApplication::screenAt(globalAnchor);
+    QScreen* screen = nullptr;
+    if (parentWidget()) screen = parentWidget()->screen();
+    if (!screen) screen = QGuiApplication::screenAt(QCursor::pos());
     if (!screen) screen = QGuiApplication::primaryScreen();
 
-    QRect area = screen ? screen->availableGeometry() : QRect(0, 0, 1440, 900);
+    const QRect avail = screen ? screen->availableGeometry() : QRect(0, 0, 1200, 800);
+    const QSize sz = size();
+    const QPoint topLeft(avail.center().x() - sz.width() / 2,
+                         avail.center().y() - sz.height() / 2);
+    move(topLeft);
 
-    QPoint pos = globalAnchor - QPoint(s.width() / 2, s.height() / 2);
-
-    if (pos.x() < area.left() + 8) pos.setX(area.left() + 8);
-    if (pos.y() < area.top() + 8) pos.setY(area.top() + 8);
-    if (pos.x() + s.width() > area.right() - 8) pos.setX(area.right() - 8 - s.width());
-    if (pos.y() + s.height() > area.bottom() - 8) pos.setY(area.bottom() - 8 - s.height());
-
-    move(pos);
-
-    setWindowOpacity(0.0);
-    m_animateOnShow = true;
     show();
     raise();
     activateWindow();
 }
 
-void CardPopupDialog::showEvent(QShowEvent* e) {
-    QDialog::showEvent(e);
-    if (m_animateOnShow) {
-        m_animateOnShow = false;
-        runShowAnimation();
+void CardPopupDialog::keyPressEvent(QKeyEvent* e) {
+    if (e->key() == Qt::Key_Escape) {
+        hide();
+        e->accept();
+        return;
     }
-}
-
-void CardPopupDialog::runShowAnimation() {
-    const QRect endG = geometry();
-    const QRect startG = QRect(endG.center() - QPoint(endG.width() * 0.47, endG.height() * 0.47),
-                               QSize(static_cast<int>(endG.width() * 0.94),
-                                     static_cast<int>(endG.height() * 0.94)));
-
-    auto* aOpacity = new QPropertyAnimation(this, "windowOpacity", this);
-    aOpacity->setDuration(160);
-    aOpacity->setStartValue(0.0);
-    aOpacity->setEndValue(1.0);
-
-    auto* aGeom = new QPropertyAnimation(this, "geometry", this);
-    aGeom->setDuration(180);
-    aGeom->setStartValue(startG);
-    aGeom->setEndValue(endG);
-
-    aOpacity->start(QAbstractAnimation::DeleteWhenStopped);
-    aGeom->start(QAbstractAnimation::DeleteWhenStopped);
+    QDialog::keyPressEvent(e);
 }
 
 } // namespace rewise::ui::widgets

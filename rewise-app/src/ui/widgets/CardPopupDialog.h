@@ -2,7 +2,6 @@
 #define REWISE_UI_WIDGETS_CARDPOPUPDIALOG_H
 
 #include <QDialog>
-#include <QPoint>
 
 namespace rewise::ui::widgets {
 
@@ -12,21 +11,18 @@ class CardPopupDialog final : public QDialog {
     Q_OBJECT
 public:
     explicit CardPopupDialog(QWidget* parent = nullptr);
-    ~CardPopupDialog() override = default;
 
     CardWidget* card() const { return m_card; }
 
-    // Shows popup close to an anchor point in global coordinates.
-    void popupNear(const QPoint& globalAnchor);
+    // Opens a wide, centered popup (horizontal card format).
+    void openCentered();
 
 protected:
-    void showEvent(QShowEvent* e) override;
+    void keyPressEvent(QKeyEvent* e) override;
 
 private:
-    void runShowAnimation();
-
+    QWidget* m_frame = nullptr;
     CardWidget* m_card = nullptr;
-    bool m_animateOnShow = true;
 };
 
 } // namespace rewise::ui::widgets
