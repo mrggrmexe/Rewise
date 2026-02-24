@@ -166,9 +166,6 @@ LibraryPage::LibraryPage(QWidget* parent)
 {
     ui->setupUi(this);
 
-    ui->wTopBar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    ui->wTopBar->setFixedHeight(56);
-
     // Tool buttons: stable geometry
     auto prepTool = [](QToolButton* b) {
         if (!b) return;
