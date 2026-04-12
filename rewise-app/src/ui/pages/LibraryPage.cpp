@@ -5,25 +5,27 @@
 #include "ui/widgets/CardTableModel.h"
 #include "ui/widgets/CardPopupDialog.h"
 #include "ui/widgets/CardWidget.h"
+#include "ui/widgets/FolderPopupDialog.h"
+#include "ui/widgets/FolderCardWidget.h"
+#include "ui/widgets/ActionMenuPopup.h"
+#include "ui/widgets/ActionMenuWidget.h"
+#include "ui/widgets/NotificationCenter.h"
+#include "ui/widgets/ToastWidget.h"
 
+#include <QApplication>
 #include <QHeaderView>
 #include <QItemSelectionModel>
-#include <QInputDialog>
-#include <QMenu>
 #include <QMessageBox>
-#include <QStyledItemDelegate>
+#include <QMetaObject>
 #include <QPainter>
 #include <QPainterPath>
-#include <QMetaObject>
-#include <QApplication>
 #include <QPalette>
+#include <QStyledItemDelegate>
 
 namespace {
 
-// soft tints
 static QColor bgHover()    { return QColor(214, 229, 255, 150); }
 static QColor bgSelected() { return QColor(206, 200, 255, 190); }
-static QColor bgAltRow()   { return QColor(16, 24, 40, 10); }
 
 static QColor mutedText(const QColor& base) {
     QColor c = base;
@@ -46,7 +48,6 @@ static void paintRounded(QPainter* p, const QRect& rect, const QColor& fill, int
 }
 
 static void neutralizeNativeSelection(QAbstractItemView* v) {
-    // Make native selection/focus invisible; we paint our own selection in delegates.
     QPalette pal = v->palette();
     pal.setColor(QPalette::Highlight, QColor(0, 0, 0, 0));
     pal.setColor(QPalette::HighlightedText, pal.color(QPalette::Text));
@@ -65,7 +66,6 @@ public:
         QStyleOptionViewItem opt(option);
         initStyleOption(&opt, index);
 
-        // remove focus state to avoid native focus rect
         opt.state &= ~QStyle::State_HasFocus;
 
         const bool selected = opt.state & QStyle::State_Selected;
@@ -103,7 +103,6 @@ public:
         QStyleOptionViewItem opt(option);
         initStyleOption(&opt, index);
 
-        // kill native focus rect
         opt.state &= ~QStyle::State_HasFocus;
 
         const bool selected = opt.state & QStyle::State_Selected;
@@ -114,7 +113,6 @@ public:
         if (selected || pressed) paintRounded(p, bg, bgSelected(), 14);
         else if (hover)          paintRounded(p, bg, bgHover(), 14);
 
-        // Question + answer preview
         const QModelIndex aIdx = index.sibling(index.row(), rewise::ui::widgets::CardTableModel::AnswerCol);
 
         QString q = oneLine(index.data(Qt::DisplayRole).toString());
@@ -166,7 +164,6 @@ LibraryPage::LibraryPage(QWidget* parent)
 {
     ui->setupUi(this);
 
-    // Tool buttons: stable geometry
     auto prepTool = [](QToolButton* b) {
         if (!b) return;
         b->setAutoRaise(false);
@@ -178,7 +175,6 @@ LibraryPage::LibraryPage(QWidget* parent)
     prepTool(ui->btnFolderMenu);
     prepTool(ui->btnAddCard);
 
-    // Models
     m_folderModel = new rewise::ui::widgets::FolderListModel(this);
     m_folderModel->setIncludeAllItem(true);
     ui->lvFolders->setModel(m_folderModel);
@@ -186,14 +182,12 @@ LibraryPage::LibraryPage(QWidget* parent)
     m_cardModel = new rewise::ui::widgets::CardTableModel(this);
     ui->tvCards->setModel(m_cardModel);
 
-    // Folder list: rounded selection via delegate
     ui->lvFolders->setMouseTracking(true);
     ui->lvFolders->setUniformItemSizes(true);
     ui->lvFolders->setSpacing(4);
     ui->lvFolders->setItemDelegate(new FolderRowDelegate(ui->lvFolders));
     neutralizeNativeSelection(ui->lvFolders);
 
-    // Cards list: list-like table view
     ui->tvCards->setMouseTracking(true);
     ui->tvCards->setShowGrid(false);
     ui->tvCards->setAlternatingRowColors(false);
@@ -212,19 +206,25 @@ LibraryPage::LibraryPage(QWidget* parent)
     ui->tvCards->setColumnHidden(rewise::ui::widgets::CardTableModel::AnswerCol, true);
     ui->tvCards->setColumnHidden(rewise::ui::widgets::CardTableModel::FolderCol, true);
     ui->tvCards->setColumnHidden(rewise::ui::widgets::CardTableModel::UpdatedCol, true);
-    ui->tvCards->horizontalHeader()->setSectionResizeMode(rewise::ui::widgets::CardTableModel::QuestionCol, QHeaderView::Stretch);
+    ui->tvCards->horizontalHeader()->setSectionResizeMode(rewise::ui::widgets::CardTableModel::QuestionCol,
+                                                          QHeaderView::Stretch);
 
     neutralizeNativeSelection(ui->tvCards);
 
-    // Popup
     m_cardPopup = new rewise::ui::widgets::CardPopupDialog(this);
+    m_folderPopup = new rewise::ui::widgets::FolderPopupDialog(this);
+    m_folderActionsPopup = new rewise::ui::widgets::ActionMenuPopup(this);
 
     wireUi();
 }
 
-LibraryPage::~LibraryPage() { delete ui; }
+LibraryPage::~LibraryPage() {
+    delete ui;
+}
 
-void LibraryPage::setNotifier(QObject* notify) { m_notify = notify; }
+void LibraryPage::setNotifier(QObject* notify) {
+    m_notify = notify;
+}
 
 void LibraryPage::setDatabase(rewise::storage::Database db) {
     m_db = std::move(db);
@@ -255,13 +255,77 @@ rewise::domain::Id LibraryPage::selectedCardId() const {
 }
 
 void LibraryPage::showError(const QString& text) {
-    if (m_notify && QMetaObject::invokeMethod(m_notify, "showError", Qt::QueuedConnection, Q_ARG(QString, text))) return;
+    if (m_notify && QMetaObject::invokeMethod(m_notify, "showError", Qt::QueuedConnection, Q_ARG(QString, text))) {
+        return;
+    }
     QMessageBox::critical(this, tr("Ошибка"), text);
 }
 
 void LibraryPage::showInfo(const QString& text) {
-    if (m_notify && QMetaObject::invokeMethod(m_notify, "showInfo", Qt::QueuedConnection, Q_ARG(QString, text))) return;
+    if (m_notify && QMetaObject::invokeMethod(m_notify, "showInfo", Qt::QueuedConnection, Q_ARG(QString, text))) {
+        return;
+    }
     QMessageBox::information(this, tr("Информация"), text);
+}
+
+void LibraryPage::openCreateFolderPopup() {
+    m_pendingFolderRenameId = {};
+    m_folderPopup->card()->setTitle(tr("Новая папка"));
+    m_folderPopup->card()->setActionText(tr("Создать"));
+    m_folderPopup->card()->setFolderName(QString());
+    m_folderPopup->openCentered();
+}
+
+void LibraryPage::openRenameFolderPopup() {
+    const rewise::domain::Id fid = selectedFolderId();
+    if (!fid.isValid()) {
+        showError(tr("Нельзя переименовать виртуальный раздел «Все карточки»."));
+        return;
+    }
+
+    const auto* f = m_db.folderById(fid);
+    if (!f) {
+        showError(tr("Папка не найдена."));
+        return;
+    }
+
+    m_pendingFolderRenameId = fid;
+    m_folderPopup->card()->setTitle(tr("Переименовать папку"));
+    m_folderPopup->card()->setActionText(tr("Сохранить"));
+    m_folderPopup->card()->setFolderName(f->name);
+    m_folderPopup->openCentered();
+}
+
+void LibraryPage::openFolderActionsPopup() {
+    const bool enabled = selectedFolderId().isValid();
+    m_folderActionsPopup->menu()->setActionsEnabled(enabled, enabled);
+    m_folderActionsPopup->openBelow(ui->btnFolderMenu, 8);
+}
+
+void LibraryPage::requestDeleteFolder() {
+    const rewise::domain::Id fid = selectedFolderId();
+    if (!fid.isValid()) {
+        showError(tr("Нельзя удалить виртуальный раздел «Все карточки"));
+        return;
+    }
+
+    if (auto* center = qobject_cast<rewise::ui::widgets::NotificationCenter*>(m_notify)) {
+        auto* toast = center->showConfirm(tr("Удалить папку? Карточки будут перенесены в Default."),
+                                          tr("Удалить"), tr("Отмена"));
+        connect(toast, &rewise::ui::widgets::ToastWidget::accepted, this, [this, fid] {
+            emit folderDeleteRequested(fid);
+        });
+        return;
+    }
+
+    const auto res = QMessageBox::question(this,
+                                           tr("Удалить папку"),
+                                           tr("Удалить папку? Карточки будут перенесены в Default."),
+                                           QMessageBox::Yes | QMessageBox::No,
+                                           QMessageBox::No);
+    if (res == QMessageBox::Yes) {
+        emit folderDeleteRequested(fid);
+    }
 }
 
 void LibraryPage::wireUi() {
@@ -276,50 +340,43 @@ void LibraryPage::wireUi() {
     });
 
     connect(ui->btnAddFolder, &QToolButton::clicked, this, [this] {
-        bool ok = false;
-        const QString name = QInputDialog::getText(this, tr("Новая папка"),
-                                                   tr("Название папки:"), QLineEdit::Normal,
-                                                   QString(), &ok);
-        if (!ok) return;
-        const QString trimmed = name.trimmed();
-        if (trimmed.isEmpty()) { showError(tr("Название не может быть пустым.")); return; }
-        emit folderCreateRequested(trimmed);
+        openCreateFolderPopup();
     });
 
     connect(ui->btnFolderMenu, &QToolButton::clicked, this, [this] {
-        QMenu menu(this);
-        QAction* actRename = menu.addAction(tr("Переименовать…"));
-        QAction* actDelete = menu.addAction(tr("Удалить…"));
-
-        const rewise::domain::Id fid = selectedFolderId();
-        const bool enabled = fid.isValid();
-
-        actRename->setEnabled(enabled);
-        actDelete->setEnabled(enabled);
-
-        QAction* chosen = menu.exec(ui->btnFolderMenu->mapToGlobal(QPoint(0, ui->btnFolderMenu->height())));
-        if (!chosen) return;
-
-        if (chosen == actRename) {
-            const auto* f = m_db.folderById(fid);
-            const QString current = f ? f->name : QString();
-
-            bool ok = false;
-            const QString name = QInputDialog::getText(this, tr("Переименовать папку"),
-                                                       tr("Новое название:"), QLineEdit::Normal,
-                                                       current, &ok);
-            if (!ok) return;
-            const QString trimmed = name.trimmed();
-            if (trimmed.isEmpty()) { showError(tr("Название не может быть пустым.")); return; }
-            emit folderRenameRequested(fid, trimmed);
-        } else if (chosen == actDelete) {
-            const auto res = QMessageBox::question(this, tr("Удалить папку"),
-                                                   tr("Удалить папку? Карточки будут перенесены в Default."),
-                                                   QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-            if (res != QMessageBox::Yes) return;
-            emit folderDeleteRequested(fid);
-        }
+        openFolderActionsPopup();
     });
+
+    connect(m_folderPopup, &rewise::ui::widgets::FolderPopupDialog::submitted,
+            this, [this](const QString& name) {
+                const QString trimmed = name.trimmed();
+                if (trimmed.isEmpty()) {
+                    showError(tr("Название не может быть пустым."));
+                    return;
+                }
+
+                if (m_pendingFolderRenameId.isValid()) {
+                    emit folderRenameRequested(m_pendingFolderRenameId, trimmed);
+                    m_pendingFolderRenameId = {};
+                } else {
+                    emit folderCreateRequested(trimmed);
+                }
+            });
+
+    connect(m_folderPopup, &rewise::ui::widgets::FolderPopupDialog::cancelled,
+            this, [this] {
+                m_pendingFolderRenameId = {};
+            });
+
+    connect(m_folderActionsPopup, &rewise::ui::widgets::ActionMenuPopup::renameRequested,
+            this, [this] {
+                openRenameFolderPopup();
+            });
+
+    connect(m_folderActionsPopup, &rewise::ui::widgets::ActionMenuPopup::deleteRequested,
+            this, [this] {
+                requestDeleteFolder();
+            });
 
     connect(ui->btnAddCard, &QToolButton::clicked, this, [this] {
         rewise::domain::Id folderId = selectedFolderId();
@@ -332,7 +389,10 @@ void LibraryPage::wireUi() {
         if (!idx.isValid()) return;
         const rewise::domain::Id cid = m_cardModel->cardIdAtRow(idx.row());
         const auto* c = m_db.cardById(cid);
-        if (!c) { showError(tr("Карточка не найдена.")); return; }
+        if (!c) {
+            showError(tr("Карточка не найдена."));
+            return;
+        }
         m_cardPopup->card()->setCard(*c);
         m_cardPopup->openCentered();
     });
@@ -342,22 +402,23 @@ void LibraryPage::wireUi() {
     });
 
     auto* cw = m_cardPopup->card();
-    connect(cw, &rewise::ui::widgets::CardWidget::saveRequested, this,
-            [this](const rewise::domain::Card& card) {
+    connect(cw, &rewise::ui::widgets::CardWidget::saveRequested,
+            this, [this](const rewise::domain::Card& card) {
                 const bool exists = (m_db.cardById(card.id) != nullptr);
                 if (exists) emit cardUpdateRequested(card.id, card.question, card.answer);
                 else emit cardCreateRequested(card.folderId, card.question, card.answer);
             });
 
-    connect(cw, &rewise::ui::widgets::CardWidget::deleteRequested, this,
-            [this](const rewise::domain::Id& id) {
+    connect(cw, &rewise::ui::widgets::CardWidget::deleteRequested,
+            this, [this](const rewise::domain::Id& id) {
                 if (!id.isValid()) return;
                 emit cardDeleteRequested(id);
             });
 
-    connect(cw, &rewise::ui::widgets::CardWidget::closeRequested, this, [this] {
-        m_cardPopup->hide();
-    });
+    connect(cw, &rewise::ui::widgets::CardWidget::closeRequested,
+            this, [this] {
+                m_cardPopup->hide();
+            });
 }
 
 } // namespace rewise::ui::pages

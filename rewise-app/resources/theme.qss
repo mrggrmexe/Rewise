@@ -1,4 +1,4 @@
-/* Rewise pastel theme — selection drawn by delegates (no native highlight) */
+/* Rewise pastel theme — widget-first UI */
 
 QWidget {
     font-size: 13px;
@@ -11,10 +11,19 @@ QWidget#ReviewPage {
     background: #F6F8FF;
 }
 
-QLabel { background: transparent; }
+QLabel {
+    background: transparent;
+}
+
+QLabel[muted="true"] {
+    color: rgba(26, 31, 43, 0.58);
+}
 
 /* Inputs */
-QLineEdit, QPlainTextEdit, QTextEdit, QTextBrowser {
+QLineEdit,
+QPlainTextEdit,
+QTextEdit,
+QTextBrowser {
     border: 1px solid rgba(88, 110, 160, 0.30);
     border-radius: 14px;
     padding: 8px 10px;
@@ -22,9 +31,20 @@ QLineEdit, QPlainTextEdit, QTextEdit, QTextBrowser {
     selection-background-color: rgba(120, 130, 255, 0.18);
     selection-color: #121726;
 }
-QLineEdit:focus, QPlainTextEdit:focus, QTextEdit:focus, QTextBrowser:focus {
+
+QLineEdit:focus,
+QPlainTextEdit:focus,
+QTextEdit:focus,
+QTextBrowser:focus {
     border: 1px solid rgba(120, 130, 255, 0.60);
     background: rgba(255, 255, 255, 0.98);
+}
+
+QTextBrowser[diffSurface="true"] {
+    border: 1px solid rgba(122, 134, 255, 0.36);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.94);
+    padding: 12px 14px;
 }
 
 /* Buttons */
@@ -33,13 +53,22 @@ QPushButton {
     border-radius: 12px;
     padding: 7px 12px;
     background: rgba(255, 255, 255, 0.90);
+    font-weight: 600;
 }
+
 QPushButton:hover {
     background: rgba(235, 242, 255, 0.95);
     border: 1px solid rgba(88, 110, 160, 0.40);
 }
+
 QPushButton:pressed {
     background: rgba(210, 224, 255, 0.86);
+}
+
+QPushButton:disabled {
+    color: rgba(26, 31, 43, 0.36);
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(88, 110, 160, 0.20);
 }
 
 QPushButton[primary="true"] {
@@ -50,19 +79,36 @@ QPushButton[primary="true"] {
     font-weight: 700;
 }
 
+QPushButton[danger="true"] {
+    border: 1px solid rgba(190, 80, 120, 0.32);
+    background: rgba(255, 236, 242, 0.94);
+}
+
+QPushButton[danger="true"]:hover {
+    border: 1px solid rgba(190, 80, 120, 0.46);
+    background: rgba(255, 226, 236, 0.98);
+}
+
+QPushButton[ghost="true"] {
+    background: rgba(255, 255, 255, 0.72);
+}
+
 /* Tool buttons */
 QToolButton {
     border: 1px solid rgba(88, 110, 160, 0.22);
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.90);
 }
+
 QToolButton:hover {
     background: rgba(235, 242, 255, 0.95);
     border: 1px solid rgba(88, 110, 160, 0.34);
 }
+
 QToolButton:pressed {
     background: rgba(210, 224, 255, 0.86);
 }
+
 QToolButton[toolIcon="true"] {
     min-width: 44px;
     min-height: 36px;
@@ -70,7 +116,16 @@ QToolButton[toolIcon="true"] {
     font-weight: 800;
 }
 
-/* Item views: force native selection to be transparent (delegates paint it) */
+QToolButton[navBack="true"] {
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 36px;
+    max-height: 36px;
+    padding: 0px;
+    font-weight: 800;
+}
+
+/* Item views */
 QAbstractItemView {
     background: transparent;
     alternate-background-color: transparent;
@@ -78,9 +133,11 @@ QAbstractItemView {
     selection-color: #1A1F2B;
     outline: 0;
 }
+
 QAbstractItemView::item {
     background: transparent;
 }
+
 QAbstractItemView::item:selected,
 QAbstractItemView::item:hover,
 QAbstractItemView::item:focus {
@@ -92,4 +149,80 @@ QHeaderView::section {
     border: none;
     background: transparent;
     padding: 0px;
+}
+
+/* Popup surfaces */
+QWidget#folderPopupFrame,
+QWidget#actionMenuFrame,
+QWidget#cardFrame {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(88, 110, 160, 0.22);
+    border-radius: 18px;
+}
+
+QWidget#FolderCardWidget,
+QWidget#ActionMenuWidget {
+    background: transparent;
+}
+
+QPushButton[actionMenuItem="true"] {
+    text-align: left;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+/* Scrollbars */
+QScrollBar:vertical {
+    background: transparent;
+    width: 12px;
+    margin: 8px 4px 8px 4px;
+}
+
+QScrollBar::handle:vertical {
+    background: rgba(120, 140, 190, 0.35);
+    border-radius: 6px;
+    min-height: 24px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: rgba(90, 138, 255, 0.45);
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;
+    width: 0px;
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: transparent;
+}
+
+QScrollBar:horizontal {
+    background: transparent;
+    height: 12px;
+    margin: 4px 8px 4px 8px;
+}
+
+QScrollBar::handle:horizontal {
+    background: rgba(120, 140, 190, 0.35);
+    border-radius: 6px;
+    min-width: 24px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: rgba(90, 138, 255, 0.45);
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    height: 0px;
+    width: 0px;
+}
+
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal {
+    background: transparent;
 }

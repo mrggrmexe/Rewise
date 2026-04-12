@@ -14,6 +14,8 @@ namespace rewise::ui::widgets {
 class FolderListModel;
 class CardTableModel;
 class CardPopupDialog;
+class FolderPopupDialog;
+class ActionMenuPopup;
 }
 
 namespace rewise::ui::pages {
@@ -52,14 +54,10 @@ signals:
 
 private:
     void wireUi();
-    void refreshFromSelection();
-
-    void requestCreateFolder();
-    void requestRenameFolder();
+    void openCreateFolderPopup();
+    void openRenameFolderPopup();
+    void openFolderActionsPopup();
     void requestDeleteFolder();
-
-    void openCreateCard();
-    void openEditCard(const rewise::domain::Id& cardId);
 
 private:
     Ui::LibraryPage* ui = nullptr;
@@ -71,6 +69,10 @@ private:
 
     QObject* m_notify = nullptr;
     rewise::ui::widgets::CardPopupDialog* m_cardPopup = nullptr;
+    rewise::ui::widgets::FolderPopupDialog* m_folderPopup = nullptr;
+    rewise::ui::widgets::ActionMenuPopup* m_folderActionsPopup = nullptr;
+
+    rewise::domain::Id m_pendingFolderRenameId;
 };
 
 } // namespace rewise::ui::pages

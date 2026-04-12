@@ -2,6 +2,7 @@
 
 #include <QFrame>
 #include <QTextBrowser>
+#include <QTextDocument>
 #include <QVBoxLayout>
 #include <QStyle>
 
@@ -18,7 +19,9 @@ DiffTextWidget::DiffTextWidget(QWidget* parent)
     m_view->setReadOnly(true);
     m_view->setFrameShape(QFrame::NoFrame);
     m_view->setProperty("flat", true);
+    m_view->setProperty("diffSurface", true);
     m_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_view->document()->setDocumentMargin(0);
 
     auto* root = new QVBoxLayout(this);
     root->setContentsMargins(0, 0, 0, 0);
@@ -39,7 +42,10 @@ void DiffTextWidget::setFramed(bool framed) {
 }
 
 void DiffTextWidget::clear() {
-    m_view->setHtml("<div style='opacity:0.65'>Пока нечего показывать.</div>");
+    m_view->setHtml(
+        "<div style='padding: 2px 0; color: rgba(26,31,43,0.58);'>"
+        "Пока нечего показывать."
+        "</div>");
 }
 
 static QString tokenSpan(const QString& text, const QString& style) {
@@ -48,7 +54,7 @@ static QString tokenSpan(const QString& text, const QString& style) {
 
 QString DiffTextWidget::renderTokens(const QVector<rewise::review::StyledToken>& tokens, bool isReference) {
     QString out;
-    out.reserve(tokens.size() * 16);
+    out.reserve(tokens.size() * 20);
 
     for (int i = 0; i < tokens.size(); ++i) {
         const auto& t = tokens[i];
@@ -61,11 +67,11 @@ QString DiffTextWidget::renderTokens(const QVector<rewise::review::StyledToken>&
             case rewise::review::DiffRole::Added:
                 style = isReference
                             ? "opacity:0.35;"
-                            : "background: rgba(60, 180, 90, 0.18); border-radius:6px; padding:1px 4px;";
+                            : "background: rgba(60, 180, 90, 0.16); border-radius:6px; padding:2px 4px;";
                 break;
             case rewise::review::DiffRole::Removed:
                 style = isReference
-                            ? "background: rgba(200, 60, 60, 0.16); border-radius:6px; padding:1px 4px; text-decoration: line-through;"
+                            ? "background: rgba(200, 60, 60, 0.14); border-radius:6px; padding:2px 4px; text-decoration: line-through;"
                             : "opacity:0.35;";
                 break;
         }
@@ -81,15 +87,15 @@ void DiffTextWidget::setReviewResult(const rewise::review::ReviewResult& r) {
     const QString usr = renderTokens(r.diff.user, false);
 
     const QString html =
-        "<div style='white-space: pre-wrap; line-height:1.38;'>"
-        "<div style='margin-bottom:12px;'>"
-          "<div style='font-weight:600; margin-bottom:6px;'>Эталон</div>"
-          "<div>" + ref + "</div>"
-        "</div>"
-        "<div>"
-          "<div style='font-weight:600; margin-bottom:6px;'>Ваш ответ</div>"
-          "<div>" + usr + "</div>"
-        "</div>"
+        "<div style='white-space: pre-wrap; line-height:1.45; padding: 2px 0;'>"
+            "<div style='margin-bottom:14px;'>"
+                "<div style='font-weight:700; margin-bottom:8px;'>Эталон</div>"
+                "<div>" + ref + "</div>"
+            "</div>"
+            "<div>"
+                "<div style='font-weight:700; margin-bottom:8px;'>Ваш ответ</div>"
+                "<div>" + usr + "</div>"
+            "</div>"
         "</div>";
 
     m_view->setHtml(html);

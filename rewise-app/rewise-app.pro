@@ -30,7 +30,11 @@ SOURCES += \
     src/ui/widgets/CardWidget.cpp \
     src/ui/widgets/CardPopupDialog.cpp \
     src/ui/widgets/ToastWidget.cpp \
-    src/ui/widgets/NotificationCenter.cpp
+    src/ui/widgets/NotificationCenter.cpp \
+    src/ui/widgets/FolderCardWidget.cpp \
+    src/ui/widgets/FolderPopupDialog.cpp \
+    src/ui/widgets/ActionMenuWidget.cpp \
+    src/ui/widgets/ActionMenuPopup.cpp
 
 HEADERS += \
     src/mainwindow.h \
@@ -60,7 +64,11 @@ HEADERS += \
     src/ui/widgets/CardWidget.h \
     src/ui/widgets/CardPopupDialog.h \
     src/ui/widgets/ToastWidget.h \
-    src/ui/widgets/NotificationCenter.h
+    src/ui/widgets/NotificationCenter.h \
+    src/ui/widgets/FolderCardWidget.h \
+    src/ui/widgets/FolderPopupDialog.h \
+    src/ui/widgets/ActionMenuWidget.h \
+    src/ui/widgets/ActionMenuPopup.h
 
 FORMS += \
     src/mainwindow.ui \

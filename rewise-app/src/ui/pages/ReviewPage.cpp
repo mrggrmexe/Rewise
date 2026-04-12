@@ -5,6 +5,7 @@
 #include "ui/widgets/NotificationCenter.h"
 
 #include <QRandomGenerator>
+#include <QToolButton>
 
 namespace rewise::ui::pages {
 
@@ -14,10 +15,14 @@ ReviewPage::ReviewPage(QWidget* parent)
 {
     ui->setupUi(this);
 
-    // Start in "empty" state
+    ui->btnBack->setText(QString());
+    ui->btnBack->setArrowType(Qt::LeftArrow);
+    ui->btnBack->setAutoRaise(false);
+    ui->btnBack->setFocusPolicy(Qt::NoFocus);
+    ui->btnBack->setProperty("navBack", true);
+
     ui->stack->setCurrentWidget(ui->pageEmpty);
 
-    // Create shared CardWidget for the session.
     m_cardWidget = new rewise::ui::widgets::CardWidget(ui->cardHost);
     m_cardWidget->setHeaderVisible(false);
     m_cardWidget->setCloseButtonVisible(false);
@@ -77,7 +82,6 @@ void ReviewPage::stopSession() {
 void ReviewPage::pickAndShowNextCard() {
     if (m_cards.isEmpty()) return;
 
-    // Random walk: prevents "same card repeat" a bit.
     int next = QRandomGenerator::global()->bounded(m_cards.size());
     if (m_cards.size() > 1 && next == m_index) {
         next = (next + 1) % m_cards.size();
